@@ -1,0 +1,216 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.main-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.mobile-menu-button:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.view-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.import-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.import-button:hover {
+  background: #4f46e5;
+}
+
+.import-button:active {
+  transform: scale(0.98);
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.detail-panel-container {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  z-index: 30;
+}
+
+.sidebar-reopen-button {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-reopen-button:hover {
+  background: #f9fafb;
+  color: #1f2937;
+  border-color: #d1d5db;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-reopen-button:active {
+  transform: scale(0.95);
+}
+
+/* Desktop - sidebar open */
+@media (min-width: 769px) {
+  .main-container.sidebar-open {
+    margin-left: 250px;
+  }
+
+  .main-container.sidebar-closed {
+    margin-left: 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .mobile-menu-button {
+    display: flex;
+  }
+
+  .main-container {
+    margin-left: 0 !important;
+  }
+
+  .main-header {
+    padding: 1rem;
+  }
+
+  .view-title {
+    font-size: 1.25rem;
+  }
+
+  .main-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .detail-panel-container {
+    width: 100%;
+    z-index: 50;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-layout {
+    background: #111827;
+  }
+
+  .main-header {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+
+  .view-title {
+    color: #f9fafb;
+  }
+
+  .mobile-menu-button {
+    color: #9ca3af;
+  }
+
+  .mobile-menu-button:hover {
+    background: #374151;
+    color: #d1d5db;
+  }
+
+  .import-button {
+    background: #4f46e5;
+  }
+
+  .import-button:hover {
+    background: #6366f1;
+  }
+
+  .sidebar-reopen-button {
+    background: #1f2937;
+    border-color: #374151;
+    color: #9ca3af;
+  }
+
+  .sidebar-reopen-button:hover {
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+}

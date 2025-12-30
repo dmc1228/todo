@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "todo": {
+      "command": "node",
+      "args": ["/Users/dcarel/Documents/2. Work and Projects/Apps/todo/mcp-server/index.js"],
+      "env": {
+        "SUPABASE_URL": "https://whiwgzoariryhpeqbgzk.supabase.co",
+        "SUPABASE_KEY": "sb_publishable_RGsMHANIby7vzVSg6qv6Sw_jaMD8JgC"
+      }
+    }
+  }
+}
