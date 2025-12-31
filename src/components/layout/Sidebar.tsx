@@ -15,6 +15,8 @@ import {
   BookOpen,
   Zap,
   AlertTriangle,
+  Bell,
+  ShoppingCart,
 } from "lucide-react";
 import { Project, Task, Section } from "../../types";
 import { SearchInput } from "../common/SearchInput";
@@ -35,6 +37,7 @@ interface SidebarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchResultCount?: number;
+  remindersCount?: number;
   onCreateProject: () => void;
   onOpenShortcuts: () => void;
   onOpenJournal: () => void;
@@ -54,11 +57,31 @@ export function Sidebar({
   searchValue,
   onSearchChange,
   searchResultCount,
+  remindersCount,
   onCreateProject,
   onOpenShortcuts,
   onOpenJournal,
 }: SidebarProps) {
   const [projectMenuOpen, setProjectMenuOpen] = useState<string | null>(null);
+
+  // Check if mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
+  // Handle view change with auto-close on mobile
+  const handleViewChange = (view: ViewType, projectId?: string) => {
+    onViewChange(view, projectId);
+    if (isMobile && isOpen) {
+      onToggle();
+    }
+  };
+
+  // Handle journal with auto-close on mobile
+  const handleOpenJournal = () => {
+    onOpenJournal();
+    if (isMobile && isOpen) {
+      onToggle();
+    }
+  };
 
   // Get "Day Plan" tasks - only from "Must finish today" or "Work on today" sections, excluding priority sections
   const getTodayCount = () => {
@@ -103,6 +126,18 @@ export function Sidebar({
     return tasks.filter((task) => task.project_id).length;
   };
 
+  const getRemindersCount = () => {
+    return remindersCount || 0;
+  };
+
+  const getShoppingCount = () => {
+    // Count tasks in shopping context sections
+    const shoppingSectionIds = new Set(
+      sections.filter((s) => (s as any).context === "shopping").map((s) => s.id)
+    );
+    return tasks.filter((task) => shoppingSectionIds.has(task.section_id)).length;
+  };
+
   const getProjectTaskCount = (projectId: string) => {
     return tasks.filter((task) => task.project_id === projectId).length;
   };
@@ -140,7 +175,7 @@ export function Sidebar({
           <div className="nav-section">
             <button
               className={`nav-item nav-item-home ${currentView === "home" ? "active" : ""}`}
-              onClick={() => onViewChange("home")}
+              onClick={() => handleViewChange("home")}
             >
               <Home size={20} />
               <span>Home</span>
@@ -150,7 +185,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "all" ? "active" : ""}`}
-              onClick={() => onViewChange("all")}
+              onClick={() => handleViewChange("all")}
             >
               <Inbox size={18} />
               <span>All Tasks</span>
@@ -159,7 +194,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "today" ? "active" : ""}`}
-              onClick={() => onViewChange("today")}
+              onClick={() => handleViewChange("today")}
             >
               <Calendar size={18} />
               <span>Day Plan</span>
@@ -170,7 +205,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "urgent_important" ? "active" : ""}`}
-              onClick={() => onViewChange("urgent_important")}
+              onClick={() => handleViewChange("urgent_important")}
             >
               <AlertTriangle size={18} />
               <span>Urgent & Important</span>
@@ -181,7 +216,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "focus" ? "active" : ""}`}
-              onClick={() => onViewChange("focus")}
+              onClick={() => handleViewChange("focus")}
             >
               <Zap size={18} />
               <span>Focus Mode</span>
@@ -192,7 +227,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "upcoming" ? "active" : ""}`}
-              onClick={() => onViewChange("upcoming")}
+              onClick={() => handleViewChange("upcoming")}
             >
               <CalendarClock size={18} />
               <span>Upcoming</span>
@@ -203,7 +238,7 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "priority" ? "active" : ""}`}
-              onClick={() => onViewChange("priority")}
+              onClick={() => handleViewChange("priority")}
             >
               <Flame size={18} />
               <span>High Priority</span>
@@ -216,10 +251,37 @@ export function Sidebar({
 
             <button
               className={`nav-item ${currentView === "journal" ? "active" : ""}`}
-              onClick={onOpenJournal}
+              onClick={handleOpenJournal}
             >
               <BookOpen size={18} />
               <span>Journal</span>
+            </button>
+
+            <button
+              className={`nav-item ${currentView === "reminders" ? "active" : ""}`}
+              onClick={() => handleViewChange("reminders")}
+            >
+              <Bell size={18} />
+              <span>Reminders</span>
+              {getRemindersCount() > 0 && (
+                <span className="nav-badge">{getRemindersCount()}</span>
+              )}
+            </button>
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-section-header">
+              <span>Lists</span>
+            </div>
+            <button
+              className={`nav-item ${currentView === "shopping" ? "active" : ""}`}
+              onClick={() => handleViewChange("shopping")}
+            >
+              <ShoppingCart size={18} />
+              <span>Shopping List</span>
+              {getShoppingCount() > 0 && (
+                <span className="nav-badge">{getShoppingCount()}</span>
+              )}
             </button>
           </div>
 
@@ -251,7 +313,7 @@ export function Sidebar({
                         ? "active"
                         : ""
                     }`}
-                    onClick={() => onViewChange("project", project.id)}
+                    onClick={() => handleViewChange("project", project.id)}
                   >
                     <span
                       className="project-dot"

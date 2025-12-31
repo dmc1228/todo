@@ -204,7 +204,7 @@
 
 @media (max-width: 768px) {
   .section-cell-header {
-    padding: 10px 12px;
+    padding: 10px 1rem;
   }
 
   .section-header-content {
@@ -218,17 +218,26 @@
   }
 
   .section-add-task-cell {
-    padding: 6px 10px 4px 10px;
+    padding: 8px 1rem;
   }
 
   .section-add-task-input {
-    padding: 8px 10px;
-    font-size: 14px;
+    padding: 12px;
+    font-size: 16px;
   }
 
   .empty-section-cell {
     padding: 1.5rem 1rem;
     font-size: 12px;
+  }
+
+  .add-task-cell {
+    padding: 0.5rem 1rem 0.75rem 1rem;
+  }
+
+  .add-task-input {
+    padding: 12px;
+    font-size: 16px;
   }
 }
 

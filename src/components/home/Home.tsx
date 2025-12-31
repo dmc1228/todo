@@ -9,6 +9,7 @@ import {
   Droplets,
   ChevronRight,
   Activity,
+  Bell,
 } from "lucide-react";
 import { Task, Section } from "../../types";
 import { supabase } from "../../lib/supabase";
@@ -96,6 +97,7 @@ export function Home({
   const [journalContent, setJournalContent] = useState("");
   const [airQuality, setAirQuality] = useState<AverageAirQuality | null>(null);
   const [loadingAirQuality, setLoadingAirQuality] = useState(true);
+  const [randomReminder, setRandomReminder] = useState<Task | null>(null);
 
   // Get "Must finish today" tasks
   const mustFinishSection = sections.find((s) =>
@@ -104,6 +106,15 @@ export function Home({
   const mustFinishTasks = mustFinishSection
     ? tasks.filter((t) => t.section_id === mustFinishSection.id)
     : [];
+
+  // Pick a random reminder (task with due date) on mount
+  useEffect(() => {
+    const reminders = tasks.filter((t) => t.due_date);
+    if (reminders.length > 0) {
+      const randomIndex = Math.floor(Math.random() * reminders.length);
+      setRandomReminder(reminders[randomIndex]);
+    }
+  }, [tasks]);
 
   // Load weather from NWS API
   useEffect(() => {
@@ -390,6 +401,21 @@ export function Home({
         </h1>
         <p className="home-date">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>
       </div>
+
+      {randomReminder && (
+        <div className="reminder-banner">
+          <Bell size={18} />
+          <div className="reminder-content">
+            <span className="reminder-label">Reminder:</span>
+            <span className="reminder-task">{randomReminder.name}</span>
+            {randomReminder.due_date && (
+              <span className="reminder-date">
+                Due {format(new Date(randomReminder.due_date), "MMM d")}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="home-grid">
         {/* Must Finish Today */}

@@ -218,7 +218,7 @@ export function SectionList({
     // Apply filters
     if (filters.importance && filters.importance.length > 0) {
       result = result.filter((task) =>
-        filters.importance!.includes(task.importance),
+        task.importance ? filters.importance!.includes(task.importance) : false,
       );
     }
     if (filters.urgent && filters.urgent.length > 0) {
@@ -227,7 +227,9 @@ export function SectionList({
       );
     }
     if (filters.length && filters.length.length > 0) {
-      result = result.filter((task) => filters.length!.includes(task.length));
+      result = result.filter((task) =>
+        task.length ? filters.length!.includes(task.length) : false
+      );
     }
     if (filters.tags && filters.tags.length > 0) {
       result = result.filter((task) =>
@@ -256,22 +258,22 @@ export function SectionList({
             bValue = b.due_date ? parseISO(b.due_date).getTime() : 0;
             break;
           case "importance":
-            const importanceOrder = {
+            const importanceOrder: Record<string, number> = {
               normal: 0,
               important: 1,
               very_important: 2,
             };
-            aValue = importanceOrder[a.importance];
-            bValue = importanceOrder[b.importance];
+            aValue = a.importance ? importanceOrder[a.importance] : -1;
+            bValue = b.importance ? importanceOrder[b.importance] : -1;
             break;
           case "urgent":
-            aValue = (a.urgent ?? false) ? 1 : 0;
-            bValue = (b.urgent ?? false) ? 1 : 0;
+            aValue = a.urgent === true ? 1 : a.urgent === false ? 0 : -1;
+            bValue = b.urgent === true ? 1 : b.urgent === false ? 0 : -1;
             break;
           case "length":
-            const lengthOrder = { short: 0, medium: 1, long: 2 };
-            aValue = lengthOrder[a.length];
-            bValue = lengthOrder[b.length];
+            const lengthOrder: Record<string, number> = { short: 0, medium: 1, long: 2 };
+            aValue = a.length ? lengthOrder[a.length] : -1;
+            bValue = b.length ? lengthOrder[b.length] : -1;
             break;
           case "tags":
             aValue = a.tags.join(",").toLowerCase();
@@ -393,10 +395,14 @@ export function SectionList({
 
     switch (column) {
       case "importance":
-        tasks.forEach((task) => values.add(task.importance));
+        tasks.forEach((task) => {
+          if (task.importance) values.add(task.importance);
+        });
         break;
       case "length":
-        tasks.forEach((task) => values.add(task.length));
+        tasks.forEach((task) => {
+          if (task.length) values.add(task.length);
+        });
         break;
       case "tags":
         tasks.forEach((task) => task.tags.forEach((tag) => values.add(tag)));
@@ -464,6 +470,14 @@ export function SectionList({
                   </div>
                 </th>
                 <th
+                  className="col-projects"
+                  style={{ width: `${columnWidths.projects}%` }}
+                >
+                  <div className="col-header-content">
+                    <span>Projects</span>
+                  </div>
+                </th>
+                <th
                   className="col-urgent"
                   style={{ width: `${columnWidths.urgent}%` }}
                 >
@@ -485,14 +499,6 @@ export function SectionList({
                 >
                   <div className="col-header-content">
                     <span>Tags</span>
-                  </div>
-                </th>
-                <th
-                  className="col-projects"
-                  style={{ width: `${columnWidths.projects}%` }}
-                >
-                  <div className="col-header-content">
-                    <span>Projects</span>
                   </div>
                 </th>
               </tr>
@@ -634,6 +640,66 @@ export function SectionList({
                     onMouseDown={(e) => {
                       e.preventDefault();
                       handleMouseDown("priority", e.clientX);
+                    }}
+                  />
+                </div>
+              </th>
+              <th
+                className="col-projects"
+                style={{ width: `${columnWidths.projects}%` }}
+              >
+                <div className="col-header-content">
+                  <button
+                    className="col-header-button"
+                    onClick={() => handleHeaderClick("project")}
+                  >
+                    <span>Projects</span>
+                    {sortColumn === "project" &&
+                      (sortDirection === "asc" ? (
+                        <ArrowUp size={14} />
+                      ) : (
+                        <ArrowDown size={14} />
+                      ))}
+                  </button>
+                  <button
+                    className={`col-filter-button ${filters.project && filters.project.length > 0 ? "active" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFilterMenu(
+                        showFilterMenu === "project" ? null : "project",
+                      );
+                    }}
+                  >
+                    <Filter size={14} />
+                  </button>
+                  {showFilterMenu === "project" && (
+                    <div className="filter-menu">
+                      {getUniqueValues("project").map((projectId) => {
+                        const project = projects.find(
+                          (p) => p.id === projectId,
+                        );
+                        return (
+                          <label key={projectId} className="filter-option">
+                            <input
+                              type="checkbox"
+                              checked={
+                                filters.project?.includes(projectId) || false
+                              }
+                              onChange={() =>
+                                toggleFilter("project", projectId)
+                              }
+                            />
+                            <span>{project?.name || "Unknown"}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div
+                    className="column-resize-handle"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleMouseDown("projects", e.clientX);
                     }}
                   />
                 </div>
@@ -791,59 +857,6 @@ export function SectionList({
                       handleMouseDown("tags", e.clientX);
                     }}
                   />
-                </div>
-              </th>
-              <th
-                className="col-projects"
-                style={{ width: `${columnWidths.projects}%` }}
-              >
-                <div className="col-header-content">
-                  <button
-                    className="col-header-button"
-                    onClick={() => handleHeaderClick("project")}
-                  >
-                    <span>Projects</span>
-                    {sortColumn === "project" &&
-                      (sortDirection === "asc" ? (
-                        <ArrowUp size={14} />
-                      ) : (
-                        <ArrowDown size={14} />
-                      ))}
-                  </button>
-                  <button
-                    className={`col-filter-button ${filters.project && filters.project.length > 0 ? "active" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowFilterMenu(
-                        showFilterMenu === "project" ? null : "project",
-                      );
-                    }}
-                  >
-                    <Filter size={14} />
-                  </button>
-                  {showFilterMenu === "project" && (
-                    <div className="filter-menu">
-                      {getUniqueValues("project").map((projectId) => {
-                        const project = projects.find(
-                          (p) => p.id === projectId,
-                        );
-                        return (
-                          <label key={projectId} className="filter-option">
-                            <input
-                              type="checkbox"
-                              checked={
-                                filters.project?.includes(projectId) || false
-                              }
-                              onChange={() =>
-                                toggleFilter("project", projectId)
-                              }
-                            />
-                            <span>{project?.name || "Unknown"}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
               </th>
             </tr>

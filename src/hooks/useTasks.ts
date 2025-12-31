@@ -123,9 +123,9 @@ export function useTasks(): UseTasksReturn {
               ? parsed.dueDate.toISOString().split("T")[0]
               : null,
             importance:
-              parsed.importance !== "normal" ? parsed.importance : "normal",
-            urgent: parsed.urgent || false,
-            length: "medium", // Default length
+              parsed.importance !== "normal" ? parsed.importance : null,
+            urgent: parsed.urgent || null,
+            length: null,
             position: maxPosition + 1,
             user_id: user.id,
           },
@@ -366,6 +366,15 @@ export function useTasks(): UseTasksReturn {
     newPosition: number,
   ) => {
     try {
+      // Optimistically update local state
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId
+            ? { ...task, section_id: newSectionId, position: newPosition }
+            : task
+        ),
+      );
+
       const { error: moveError } = await supabase
         .from("tasks")
         .update({

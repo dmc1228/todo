@@ -10,6 +10,8 @@ export type ViewType =
   | "urgent_important"
   | "focus"
   | "journal"
+  | "reminders"
+  | "shopping"
   | "project";
 
 export interface FilterCriteria {
@@ -107,8 +109,8 @@ export function useTaskFilter(
             important: 1,
             normal: 2,
           };
-          const impA = importanceOrder[a.importance] ?? 2;
-          const impB = importanceOrder[b.importance] ?? 2;
+          const impA = a.importance ? importanceOrder[a.importance] : 2;
+          const impB = b.importance ? importanceOrder[b.importance] : 2;
           return impA - impB;
         });
         break;
@@ -118,8 +120,29 @@ export function useTaskFilter(
         result = [];
         break;
 
+      case "reminders":
+        // Show tasks that have due dates, sorted by due date
+        result = result
+          .filter((task) => task.due_date)
+          .sort((a, b) => {
+            const dateA = new Date(a.due_date!).getTime();
+            const dateB = new Date(b.due_date!).getTime();
+            return dateA - dateB;
+          });
+        break;
+
+      case "shopping":
+        // Shopping list tasks are filtered by section context in the component
+        // This filter is a no-op since tasks are already filtered by section
+        break;
+
       case "all":
       default:
+        // For 'all' view, only show tasks from 'main' context sections
+        const mainSectionIds = new Set(
+          sections.filter((s) => (s as any).context === "main" || !(s as any).context).map((s) => s.id)
+        );
+        result = result.filter((task) => mainSectionIds.has(task.section_id));
         // No additional filtering for 'all' view
         break;
     }

@@ -59,7 +59,13 @@ export function useProjects(): UseProjectsReturn {
 
       if (fetchError) throw fetchError;
 
-      setProjects(data || []);
+      // Ensure all projects have view_mode (default to 'standard' for backwards compatibility)
+      const projectsWithViewMode = (data || []).map((p) => ({
+        ...p,
+        view_mode: p.view_mode || "standard",
+      }));
+
+      setProjects(projectsWithViewMode);
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -108,6 +114,11 @@ export function useProjects(): UseProjectsReturn {
 
   const updateProject = async (id: string, updates: Partial<Project>) => {
     try {
+      // Optimistically update local state
+      setProjects((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
+      );
+
       const { error: updateError } = await supabase
         .from("projects")
         .update(updates)
@@ -116,6 +127,8 @@ export function useProjects(): UseProjectsReturn {
       if (updateError) throw updateError;
     } catch (err) {
       setError(err as Error);
+      // Refetch to restore correct state
+      fetchProjects();
     }
   };
 

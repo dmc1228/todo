@@ -11,8 +11,8 @@ interface ColumnWidths {
 }
 
 const DEFAULT_WIDTHS: ColumnWidths = {
-  taskName: 33, // percentage
-  dueDate: 12,
+  taskName: 36, // percentage
+  dueDate: 9,
   priority: 10,
   urgent: 8,
   length: 10,
@@ -43,6 +43,7 @@ export function useColumnResize() {
         | "taskName"
         | "dueDate"
         | "priority"
+        | "projects"
         | "urgent"
         | "length"
         | "tags",
@@ -52,20 +53,21 @@ export function useColumnResize() {
       startXRef.current = startX;
       startWidthRef.current = columnWidths[column];
 
-      // Store the width of the next column
+      // Store the width of the next column (new order: taskName, dueDate, priority, projects, urgent, length, tags)
       if (column === "taskName") {
         nextStartWidthRef.current = columnWidths.dueDate;
       } else if (column === "dueDate") {
         nextStartWidthRef.current = columnWidths.priority;
       } else if (column === "priority") {
+        nextStartWidthRef.current = columnWidths.projects;
+      } else if (column === "projects") {
         nextStartWidthRef.current = columnWidths.urgent;
       } else if (column === "urgent") {
         nextStartWidthRef.current = columnWidths.length;
       } else if (column === "length") {
         nextStartWidthRef.current = columnWidths.tags;
-      } else if (column === "tags") {
-        nextStartWidthRef.current = columnWidths.projects;
       }
+      // tags is the last column, no next column
 
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
@@ -92,6 +94,7 @@ export function useColumnResize() {
           Math.min(70, nextStartWidthRef.current - deltaPercent),
         );
 
+        // New order: taskName, dueDate, priority, projects, urgent, length, tags
         if (isResizing === "taskName") {
           return {
             ...prev,
@@ -108,6 +111,12 @@ export function useColumnResize() {
           return {
             ...prev,
             priority: newWidth,
+            projects: nextWidth,
+          };
+        } else if (isResizing === "projects") {
+          return {
+            ...prev,
+            projects: newWidth,
             urgent: nextWidth,
           };
         } else if (isResizing === "urgent") {
@@ -121,12 +130,6 @@ export function useColumnResize() {
             ...prev,
             length: newWidth,
             tags: nextWidth,
-          };
-        } else if (isResizing === "tags") {
-          return {
-            ...prev,
-            tags: newWidth,
-            projects: nextWidth,
           };
         }
         return prev;

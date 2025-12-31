@@ -12,9 +12,9 @@ interface QuickAddModalProps {
     name: string;
     sectionId: string;
     dueDate: string | null;
-    importance: Task["importance"];
-    urgent: boolean;
-    length: Task["length"];
+    importance: Task["importance"] | null;
+    urgent: boolean | null;
+    length: Task["length"] | null;
     tags: string[];
     projectId: string | null;
   }) => void;
@@ -30,9 +30,9 @@ export function QuickAddModal({
   const [name, setName] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [importance, setImportance] = useState<Task["importance"]>("normal");
-  const [urgent, setUrgent] = useState(false);
-  const [length, setLength] = useState<Task["length"]>("medium");
+  const [importance, setImportance] = useState<Task["importance"] | null>(null);
+  const [urgent, setUrgent] = useState<boolean | null>(null);
+  const [length, setLength] = useState<Task["length"] | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [projectId, setProjectId] = useState("");
 
@@ -164,12 +164,14 @@ export function QuickAddModal({
             <div className="quick-add-row">
               <label className="quick-add-label">Priority</label>
               <select
-                value={importance}
-                onChange={(e) =>
-                  setImportance(e.target.value as Task["importance"])
-                }
+                value={importance ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setImportance(val === "" ? null : val as Task["importance"]);
+                }}
                 className="quick-add-select"
               >
+                <option value=""></option>
                 <option value="normal">Low</option>
                 <option value="important">Medium</option>
                 <option value="very_important">High</option>
@@ -179,10 +181,14 @@ export function QuickAddModal({
             <div className="quick-add-row">
               <label className="quick-add-label">Urgent</label>
               <select
-                value={urgent.toString()}
-                onChange={(e) => setUrgent(e.target.value === "true")}
+                value={urgent === null ? "" : urgent.toString()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setUrgent(val === "" ? null : val === "true");
+                }}
                 className="quick-add-select"
               >
+                <option value=""></option>
                 <option value="false">No</option>
                 <option value="true">Yes</option>
               </select>
@@ -191,10 +197,14 @@ export function QuickAddModal({
             <div className="quick-add-row">
               <label className="quick-add-label">Length</label>
               <select
-                value={length}
-                onChange={(e) => setLength(e.target.value as Task["length"])}
+                value={length ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setLength(val === "" ? null : val as Task["length"]);
+                }}
                 className="quick-add-select"
               >
+                <option value=""></option>
                 <option value="short">Short</option>
                 <option value="medium">Medium</option>
                 <option value="long">Long</option>

@@ -32,7 +32,7 @@ export function TaskDetail({
   onDelete,
 }: TaskDetailProps) {
   const [name, setName] = useState(task.name);
-  const [importance, setImportance] = useState<Importance>(task.importance);
+  const [importance, setImportance] = useState<Importance | null>(task.importance);
   const [sectionId, setSectionId] = useState(task.section_id);
   const [projectId, setProjectId] = useState<string | null>(task.project_id);
   const [dueDate, setDueDate] = useState<string | null>(task.due_date);

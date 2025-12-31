@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { AppLayout } from "./components/layout/AppLayout";
 import { SectionList } from "./components/sections/SectionList";
@@ -7,6 +7,7 @@ import { BatchEditToolbar } from "./components/tasks/BatchEditToolbar";
 import { SectionMoveDropdown } from "./components/tasks/SectionMoveDropdown";
 import { QuickAddModal } from "./components/tasks/QuickAddModal";
 import { Journal } from "./components/journal/Journal";
+import { Reminders } from "./components/reminders/Reminders";
 import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
 import { Home } from "./components/home/Home";
@@ -26,6 +27,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useSections } from "./hooks/useSections";
 import { useTasks } from "./hooks/useTasks";
 import { useProjects } from "./hooks/useProjects";
+import { useReminders } from "./hooks/useReminders";
 import { useTaskFilter, ViewType } from "./hooks/useTaskFilter";
 import { useToast } from "./hooks/useToast";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -75,9 +77,120 @@ function AppContent() {
     reorderTasks,
     moveTaskToSection,
   } = useTasks();
-  const { projects, loading: projectsLoading, createProject } = useProjects();
+  const { projects, loading: projectsLoading, createProject, updateProject } = useProjects();
+  const {
+    reminders,
+    loading: remindersLoading,
+    createReminder,
+    updateReminder,
+    deleteReminder,
+    completeReminder,
+  } = useReminders();
 
-  const isLoading = sectionsLoading || tasksLoading || projectsLoading;
+  const isLoading = sectionsLoading || tasksLoading || projectsLoading || remindersLoading;
+
+  // Track which tasks have been auto-moved to prevent duplicate moves
+  const autoMovedTasksRef = useRef<Set<string>>(new Set());
+
+  // Auto-move tasks based on due dates
+  useEffect(() => {
+    if (isLoading || tasks.length === 0 || sections.length === 0) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Find the target sections
+    const highPrioritySection = sections.find(
+      (s) => s.name.toLowerCase() === "high priority"
+    );
+    const workOnTodaySection = sections.find(
+      (s) => s.name.toLowerCase() === "work on today"
+    );
+    const mustFinishTodaySection = sections.find(
+      (s) => s.name.toLowerCase() === "must finish today"
+    );
+
+    if (!highPrioritySection || !workOnTodaySection || !mustFinishTodaySection) {
+      return;
+    }
+
+    const tasksToMove: { taskId: string; targetSectionId: string; reason: string }[] = [];
+
+    for (const task of tasks) {
+      // Skip if no due date, already completed, or already auto-moved this session
+      if (!task.due_date || task.completed_at || autoMovedTasksRef.current.has(task.id)) {
+        continue;
+      }
+
+      const dueDate = new Date(task.due_date);
+      dueDate.setHours(0, 0, 0, 0);
+
+      const daysUntilDue = Math.ceil(
+        (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      let targetSectionId: string | null = null;
+
+      // Due tomorrow or today or overdue → Must Finish Today
+      if (daysUntilDue <= 1) {
+        if (task.section_id !== mustFinishTodaySection.id) {
+          targetSectionId = mustFinishTodaySection.id;
+        }
+      }
+      // Due in 2 days → Work on Today
+      else if (daysUntilDue <= 2) {
+        if (
+          task.section_id !== mustFinishTodaySection.id &&
+          task.section_id !== workOnTodaySection.id
+        ) {
+          targetSectionId = workOnTodaySection.id;
+        }
+      }
+      // Due within a week → High Priority
+      else if (daysUntilDue <= 7) {
+        if (
+          task.section_id !== mustFinishTodaySection.id &&
+          task.section_id !== workOnTodaySection.id &&
+          task.section_id !== highPrioritySection.id
+        ) {
+          targetSectionId = highPrioritySection.id;
+        }
+      }
+
+      if (targetSectionId) {
+        tasksToMove.push({
+          taskId: task.id,
+          targetSectionId,
+          reason: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? "s" : ""}`,
+        });
+      }
+    }
+
+    // Move tasks asynchronously
+    const moveTasks = async () => {
+      for (const { taskId, targetSectionId } of tasksToMove) {
+        // Mark as auto-moved to prevent duplicate moves
+        autoMovedTasksRef.current.add(taskId);
+
+        // Get position at end of target section
+        const sectionTasks = tasks.filter((t) => t.section_id === targetSectionId);
+        const newPosition =
+          sectionTasks.length > 0
+            ? Math.max(...sectionTasks.map((t) => t.position)) + 1
+            : 0;
+
+        await moveTaskToSection(taskId, targetSectionId, newPosition);
+      }
+
+      if (tasksToMove.length > 0) {
+        success(
+          `Moved ${tasksToMove.length} task${tasksToMove.length > 1 ? "s" : ""} based on due dates`
+        );
+      }
+    };
+
+    moveTasks();
+  }, [isLoading, tasks, sections, moveTaskToSection, success]);
 
   // Journal state - setJournalOpen used for view changes
   const [, setJournalOpen] = useState(false);
@@ -130,15 +243,39 @@ function AppContent() {
     },
   );
 
-  // Filter sections based on current view
-  const filteredSections =
-    currentView === "today"
-      ? sections.filter((s) => {
-          const name = s.name.toLowerCase();
-          const isPrioritySection = name.includes("priority");
-          return !isPrioritySection;
-        })
-      : sections;
+  // Filter sections based on current view and context
+  const filteredSections = useMemo(() => {
+    // Shopping view uses shopping context sections
+    if (currentView === "shopping") {
+      return sections.filter((s) => (s as any).context === "shopping");
+    }
+
+    // Project view with custom sections uses project-specific context
+    if (currentView === "project" && currentProjectId) {
+      const project = projects.find((p) => p.id === currentProjectId);
+      if ((project as any)?.view_mode === "custom") {
+        return sections.filter(
+          (s) => (s as any).context === `project-${currentProjectId}`
+        );
+      }
+    }
+
+    // Default: use main context sections
+    const mainSections = sections.filter(
+      (s) => (s as any).context === "main" || !(s as any).context
+    );
+
+    // For today view, filter out priority sections
+    if (currentView === "today") {
+      return mainSections.filter((s) => {
+        const name = s.name.toLowerCase();
+        const isPrioritySection = name.includes("priority");
+        return !isPrioritySection;
+      });
+    }
+
+    return mainSections;
+  }, [sections, currentView, currentProjectId, projects]);
 
   const handleViewChange = (view: ViewType, projectId?: string) => {
     setCurrentView(view);
@@ -155,14 +292,25 @@ function AppContent() {
   const handleCreateSection = useCallback(async () => {
     const name = prompt("Section name:");
     if (name?.trim()) {
-      const result = await createSection(name.trim());
+      // Determine context based on current view
+      let context = "main";
+      if (currentView === "shopping") {
+        context = "shopping";
+      } else if (currentView === "project" && currentProjectId) {
+        const project = projects.find((p) => p.id === currentProjectId);
+        if ((project as any)?.view_mode === "custom") {
+          context = `project-${currentProjectId}`;
+        }
+      }
+
+      const result = await createSection(name.trim(), context);
       if (result) {
         success("Section created");
       } else {
         error("Failed to create section");
       }
     }
-  }, [createSection, success, error]);
+  }, [createSection, success, error, currentView, currentProjectId, projects]);
 
   const handleCreateProject = useCallback(async () => {
     const name = prompt("Project name:");
@@ -175,6 +323,13 @@ function AppContent() {
       }
     }
   }, [createProject, success, error]);
+
+  const handleToggleProjectViewMode = useCallback(
+    async (projectId: string, newMode: "standard" | "custom") => {
+      await updateProject(projectId, { view_mode: newMode });
+    },
+    [updateProject],
+  );
 
   const handleAddTask = useCallback(
     async (sectionId: string, rawInput: string) => {
@@ -264,6 +419,7 @@ function AppContent() {
     (taskId: string, event?: React.MouseEvent) => {
       const isCmdOrCtrl = event?.metaKey || event?.ctrlKey;
       const isShift = event?.shiftKey;
+      const isMobile = window.innerWidth <= 768;
 
       if (isCmdOrCtrl) {
         // Toggle selection for this task
@@ -316,6 +472,11 @@ function AppContent() {
         setSelectedTaskIds(new Set());
         setSelectedTaskId(taskId);
         setLastSelectedTaskId(taskId);
+
+        // On mobile, automatically open the detail panel
+        if (isMobile) {
+          setDetailPanelTaskId(taskId);
+        }
       }
     },
     [filteredTasks, tasks, lastSelectedTaskId],
@@ -392,9 +553,9 @@ function AppContent() {
       name: string;
       sectionId: string;
       dueDate: string | null;
-      importance: Task["importance"];
-      urgent: boolean;
-      length: Task["length"];
+      importance: Task["importance"] | null;
+      urgent: boolean | null;
+      length: Task["length"] | null;
       tags: string[];
       projectId: string | null;
     }) => {
@@ -630,6 +791,10 @@ function AppContent() {
         return "Focus Mode";
       case "journal":
         return "Journal";
+      case "reminders":
+        return "Reminders";
+      case "shopping":
+        return "Shopping List";
       case "project": {
         const project = projects.find((p) => p.id === currentProjectId);
         return project ? project.name : "Project";
@@ -655,10 +820,12 @@ function AppContent() {
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         searchResultCount={searchValue ? resultCount : undefined}
+        remindersCount={reminders.length}
         onCreateProject={handleCreateProject}
         onOpenShortcuts={() => setShowShortcutsHelp(true)}
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
+        onToggleProjectViewMode={handleToggleProjectViewMode}
         viewName={getViewName()}
       >
         {isLoading ? (
@@ -672,6 +839,14 @@ function AppContent() {
           />
         ) : currentView === "journal" ? (
           <Journal />
+        ) : currentView === "reminders" ? (
+          <Reminders
+            reminders={reminders}
+            onCreateReminder={createReminder}
+            onCompleteReminder={completeReminder}
+            onUpdateReminder={updateReminder}
+            onDeleteReminder={deleteReminder}
+          />
         ) : (
           <SectionList
             sections={filteredSections}

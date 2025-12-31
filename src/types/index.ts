@@ -3,11 +3,14 @@
 export type Importance = "normal" | "important" | "very_important";
 export type Length = "short" | "medium" | "long";
 export type RecurrenceRule = "daily" | "weekly" | "monthly" | "yearly" | null;
+export type SectionContext = "main" | "shopping" | string; // string for "project-{id}"
+export type ProjectViewMode = "standard" | "custom";
 
 export interface Section {
   id: string;
   name: string;
   position: number;
+  context: SectionContext; // 'main', 'shopping', or 'project-{projectId}'
   user_id: string;
   created_at: string;
 }
@@ -16,6 +19,16 @@ export interface Project {
   id: string;
   name: string;
   color: string;
+  view_mode: ProjectViewMode; // 'standard' uses main sections, 'custom' uses project-specific sections
+  user_id: string;
+  created_at: string;
+}
+
+export interface Reminder {
+  id: string;
+  name: string;
+  due_date: string | null;
+  completed: boolean;
   user_id: string;
   created_at: string;
 }
@@ -29,9 +42,9 @@ export interface Task {
   due_date: string | null;
   strict_due_date: boolean;
   notes: string | null;
-  importance: Importance;
-  urgent: boolean;
-  length: Length;
+  importance: Importance | null;
+  urgent: boolean | null;
+  length: Length | null;
   position: number;
   completed_at: string | null;
   archived: boolean;
@@ -62,6 +75,7 @@ export interface NewTask {
 export interface NewSection {
   name: string;
   position: number;
+  context?: SectionContext;
 }
 
 export interface NewProject {

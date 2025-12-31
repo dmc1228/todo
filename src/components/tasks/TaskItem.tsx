@@ -7,6 +7,7 @@ import {
   Circle,
   CheckCircle2,
   AlertTriangle,
+  X,
 } from "lucide-react";
 import { Task, Project } from "../../types";
 import "./TaskItem.css";
@@ -111,6 +112,11 @@ export function TaskItem({
     onUpdate(task.id, { due_date: e.target.value || null });
   };
 
+  const handleClearDueDate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdate(task.id, { due_date: null, strict_due_date: false });
+  };
+
   const handleStrictDueDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -139,17 +145,20 @@ export function TaskItem({
 
   const handlePriorityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    onUpdate(task.id, { importance: e.target.value as Task["importance"] });
+    const value = e.target.value;
+    onUpdate(task.id, { importance: value === "" ? null : value as Task["importance"] });
   };
 
   const handleUrgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    onUpdate(task.id, { urgent: e.target.value === "true" });
+    const value = e.target.value;
+    onUpdate(task.id, { urgent: value === "" ? null : value === "true" });
   };
 
   const handleLengthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    onUpdate(task.id, { length: e.target.value as Task["length"] });
+    const value = e.target.value;
+    onUpdate(task.id, { length: value === "" ? null : value as Task["length"] });
   };
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -271,15 +280,12 @@ export function TaskItem({
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <>
-              <span
-                className={`task-name ${isCompleting ? "strikethrough" : ""}`}
-                onClick={handleNameClick}
-              >
-                {task.name}
-              </span>
-              <div className="task-name-spacer" />
-            </>
+            <span
+              className={`task-name ${isCompleting ? "strikethrough" : ""}`}
+              onClick={handleNameClick}
+            >
+              {task.name}
+            </span>
           )}
           <div className="task-drag-handle">
             <GripVertical size={14} />
@@ -307,15 +313,24 @@ export function TaskItem({
             placeholder="Set date"
           />
           {task.due_date && (
-            <label className="strict-checkbox-label" title="Strict deadline">
-              <input
-                type="checkbox"
-                checked={task.strict_due_date || false}
-                onChange={handleStrictDueDateChange}
-                className="strict-checkbox"
-              />
-              <span className="strict-label-text">!</span>
-            </label>
+            <>
+              <label className="strict-checkbox-label" title="Strict deadline">
+                <input
+                  type="checkbox"
+                  checked={task.strict_due_date || false}
+                  onChange={handleStrictDueDateChange}
+                  className="strict-checkbox"
+                />
+                <span className="strict-label-text">!</span>
+              </label>
+              <button
+                className="due-date-clear-btn"
+                onClick={handleClearDueDate}
+                title="Clear due date"
+              >
+                <X size={14} />
+              </button>
+            </>
           )}
         </div>
       </td>
@@ -328,13 +343,35 @@ export function TaskItem({
         onClick={(e) => e.stopPropagation()}
       >
         <select
-          value={task.importance}
+          value={task.importance ?? ""}
           onChange={handlePriorityChange}
-          className={`inline-select priority-select priority-${task.importance}`}
+          className={`inline-select priority-select priority-${task.importance ?? "blank"}`}
         >
+          <option value=""></option>
           <option value="normal">Low</option>
           <option value="important">Medium</option>
           <option value="very_important">High</option>
+        </select>
+      </td>
+
+      <td
+        className="task-cell-project"
+        style={
+          columnWidths ? { width: `${columnWidths.projects}%` } : undefined
+        }
+        onClick={(e) => e.stopPropagation()}
+      >
+        <select
+          value={task.project_id || ""}
+          onChange={handleProjectChange}
+          className="inline-select project-select"
+        >
+          <option value="">No Project</option>
+          {projects.map((proj) => (
+            <option key={proj.id} value={proj.id}>
+              {proj.name}
+            </option>
+          ))}
         </select>
       </td>
 
@@ -344,10 +381,11 @@ export function TaskItem({
         onClick={(e) => e.stopPropagation()}
       >
         <select
-          value={(task.urgent ?? false).toString()}
+          value={task.urgent === null ? "" : task.urgent.toString()}
           onChange={handleUrgentChange}
-          className={`inline-select urgent-select urgent-${task.urgent ?? false}`}
+          className={`inline-select urgent-select urgent-${task.urgent === null ? "blank" : task.urgent}`}
         >
+          <option value=""></option>
           <option value="false">No</option>
           <option value="true">Yes</option>
         </select>
@@ -359,10 +397,11 @@ export function TaskItem({
         onClick={(e) => e.stopPropagation()}
       >
         <select
-          value={task.length}
+          value={task.length ?? ""}
           onChange={handleLengthChange}
-          className={`inline-select length-select length-${task.length}`}
+          className={`inline-select length-select length-${task.length ?? "blank"}`}
         >
+          <option value=""></option>
           <option value="short">Short</option>
           <option value="medium">Medium</option>
           <option value="long">Long</option>
@@ -409,27 +448,6 @@ export function TaskItem({
             />
           )}
         </div>
-      </td>
-
-      <td
-        className="task-cell-project"
-        style={
-          columnWidths ? { width: `${columnWidths.projects}%` } : undefined
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        <select
-          value={task.project_id || ""}
-          onChange={handleProjectChange}
-          className="inline-select project-select"
-        >
-          <option value="">No Project</option>
-          {projects.map((proj) => (
-            <option key={proj.id} value={proj.id}>
-              {proj.name}
-            </option>
-          ))}
-        </select>
       </td>
     </motion.tr>
   );

@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { Section } from "../types";
+import { Section, SectionContext } from "../types";
 import { useAuth } from "./useAuth";
 
 interface UseSectionsReturn {
   sections: Section[];
   loading: boolean;
   error: Error | null;
-  createSection: (name: string) => Promise<Section | null>;
+  createSection: (name: string, context?: SectionContext) => Promise<Section | null>;
   updateSection: (id: string, updates: Partial<Section>) => Promise<void>;
   deleteSection: (id: string) => Promise<void>;
   reorderSections: (orderedIds: string[]) => Promise<void>;
+  getSectionsByContext: (context: SectionContext) => Section[];
 }
 
 export function useSections(): UseSectionsReturn {
@@ -59,7 +60,13 @@ export function useSections(): UseSectionsReturn {
 
       if (fetchError) throw fetchError;
 
-      setSections(data || []);
+      // Ensure all sections have a context (default to 'main' for backwards compatibility)
+      const sectionsWithContext = (data || []).map((s) => ({
+        ...s,
+        context: s.context || "main",
+      }));
+
+      setSections(sectionsWithContext);
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -69,13 +76,19 @@ export function useSections(): UseSectionsReturn {
     }
   };
 
-  const createSection = async (name: string): Promise<Section | null> => {
+  const createSection = async (
+    name: string,
+    context: SectionContext = "main"
+  ): Promise<Section | null> => {
     if (!user) return null;
 
     try {
-      // Get the highest position
+      // Get the highest position for this context
+      const contextSections = sections.filter((s) => s.context === context);
       const maxPosition =
-        sections.length > 0 ? Math.max(...sections.map((s) => s.position)) : -1;
+        contextSections.length > 0
+          ? Math.max(...contextSections.map((s) => s.position))
+          : -1;
 
       const { data, error: createError } = await supabase
         .from("sections")
@@ -83,6 +96,7 @@ export function useSections(): UseSectionsReturn {
           {
             name,
             position: maxPosition + 1,
+            context,
             user_id: user.id,
           },
         ])
@@ -96,7 +110,8 @@ export function useSections(): UseSectionsReturn {
 
       // Optimistically update local state
       if (data) {
-        setSections((prev) => [...prev, data]);
+        const sectionWithContext = { ...data, context: data.context || context };
+        setSections((prev) => [...prev, sectionWithContext]);
       }
 
       return data;
@@ -105,6 +120,10 @@ export function useSections(): UseSectionsReturn {
       setError(err as Error);
       return null;
     }
+  };
+
+  const getSectionsByContext = (context: SectionContext): Section[] => {
+    return sections.filter((s) => s.context === context);
   };
 
   const updateSection = async (id: string, updates: Partial<Section>) => {
@@ -171,5 +190,6 @@ export function useSections(): UseSectionsReturn {
     updateSection,
     deleteSection,
     reorderSections,
+    getSectionsByContext,
   };
 }

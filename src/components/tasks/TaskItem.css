@@ -83,12 +83,6 @@
 .task-name {
   cursor: text;
   transition: all 0.3s ease;
-  /* Don't use flex: 1 so clicking empty space doesn't trigger edit */
-}
-
-.task-name-spacer {
-  flex: 1;
-  /* This fills the remaining space but clicking it won't trigger edit */
 }
 
 .task-name.strikethrough {
@@ -115,16 +109,16 @@
 }
 
 .task-cell-due-date {
-  padding: 6px 12px;
-  width: 15%;
-  min-width: 140px;
+  padding: 6px 8px;
+  width: 9%;
+  min-width: 100px;
   font-size: 13px;
 }
 
 .due-date-container {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0;
 }
 
 .due-date-text {
@@ -243,7 +237,32 @@
   border-color: #9ca3af;
 }
 
+.due-date-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: #9ca3af;
+  border-radius: 3px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.task-row:hover .due-date-clear-btn {
+  opacity: 1;
+}
+
+.due-date-clear-btn:hover {
+  color: #dc2626;
+  background-color: #fee2e2;
+}
+
 .task-cell-priority {
+  display: none;
   padding: 6px 12px;
   width: 10%;
   min-width: 80px;
@@ -320,6 +339,12 @@
   color: inherit;
   cursor: pointer;
   transition: all 0.15s;
+}
+
+/* Remove internal padding from date input */
+.inline-date-input::-webkit-calendar-picker-indicator {
+  margin-left: 0;
+  padding-left: 0;
 }
 
 .inline-name-input {
@@ -578,102 +603,99 @@
 }
 
 @media (max-width: 768px) {
-  .task-cell-project {
+  /* Hide all extra columns on mobile */
+  .task-cell-project,
+  .task-cell-tags,
+  .task-cell-length,
+  .task-cell-priority,
+  .task-cell-urgent,
+  .task-cell-due-date,
+  .task-cell-number {
     display: none;
   }
 
-  .task-cell-tags {
-    display: none;
+  .task-row {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    touch-action: pan-y;
   }
 
-  .task-cell-length {
-    display: none;
+  .task-row:active {
+    background-color: #f3f4f6;
   }
 
   .task-cell-name {
-    min-width: 150px;
-    padding: 8px 10px;
-    font-size: 13px;
+    display: flex;
+    flex: 1;
+    padding: 0;
+    min-width: unset;
+    width: 100%;
   }
 
-  .task-cell-due-date {
-    min-width: 100px;
-    padding: 8px 8px;
-  }
-
-  .task-cell-priority {
-    min-width: 60px;
-    padding: 8px 6px;
-  }
-
-  .task-cell-urgent {
-    min-width: 50px;
-    padding: 8px 6px;
-  }
-
-  .task-cell-number {
-    width: 36px;
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-
-  .inline-select {
-    padding: 6px 4px;
-    font-size: 11px;
-  }
-
-  .inline-date-input {
-    padding: 6px 4px;
-    font-size: 11px;
+  .task-name-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .task-checkbox {
-    padding: 4px;
+    padding: 8px;
+    margin: -8px;
+    margin-right: 4px;
+  }
+
+  .checkbox-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .task-name {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #1f2937;
   }
 
   .task-drag-handle {
     display: none;
   }
+
+  /* Show chevron indicator on mobile */
+  .task-name-container::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #9ca3af;
+    border-bottom: 2px solid #9ca3af;
+    transform: rotate(-45deg);
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .inline-name-input {
+    font-size: 15px;
+    padding: 0;
+  }
 }
 
-@media (max-width: 480px) {
-  .task-cell-urgent {
-    display: none;
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  .task-row {
+    border-bottom-color: #374151;
   }
 
-  .task-cell-priority {
-    display: none;
-  }
-
-  .task-cell-number {
-    display: none;
-  }
-
-  .task-cell-name {
-    min-width: 120px;
-    padding: 10px 8px;
-  }
-
-  .task-cell-due-date {
-    min-width: 80px;
-    padding: 10px 6px;
+  .task-row:active {
+    background-color: #374151;
   }
 
   .task-name {
-    font-size: 14px;
+    color: #f9fafb;
   }
 
-  .inline-date-input {
-    font-size: 12px;
-    padding: 8px 4px;
-  }
-
-  .task-checkbox {
-    padding: 6px;
-  }
-
-  .checkbox-icon {
-    width: 20px;
-    height: 20px;
+  .task-name-container::after {
+    border-color: #6b7280;
   }
 }

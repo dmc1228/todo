@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { Menu, Upload, ChevronRight } from "lucide-react";
+import { Menu, Upload, ChevronRight, LayoutList, FolderKanban } from "lucide-react";
 import { Sidebar } from "./Sidebar";
-import { Project, Task, Section } from "../../types";
+import { Project, Task, Section, ProjectViewMode } from "../../types";
 import { ViewType } from "../../hooks/useTaskFilter";
 import "./AppLayout.css";
 
@@ -20,10 +20,14 @@ interface AppLayoutProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchResultCount?: number;
+  remindersCount?: number;
   onCreateProject: () => void;
   onOpenShortcuts: () => void;
   onOpenJournal: () => void;
   onImport: () => void;
+
+  // Project view mode
+  onToggleProjectViewMode?: (projectId: string, newMode: ProjectViewMode) => void;
 
   // Main content
   viewName: string;
@@ -47,14 +51,21 @@ export function AppLayout({
   searchValue,
   onSearchChange,
   searchResultCount,
+  remindersCount,
   onCreateProject,
   onOpenShortcuts,
   onOpenJournal,
   onImport,
+  onToggleProjectViewMode,
   viewName,
   children,
   detailPanel,
 }: AppLayoutProps) {
+  // Get current project's view mode
+  const currentProject = currentView === "project" && currentProjectId
+    ? projects.find((p) => p.id === currentProjectId)
+    : null;
+  const projectViewMode = currentProject?.view_mode || "standard";
   return (
     <div className="app-layout">
       <Sidebar
@@ -71,6 +82,7 @@ export function AppLayout({
         searchValue={searchValue}
         onSearchChange={onSearchChange}
         searchResultCount={searchResultCount}
+        remindersCount={remindersCount}
         onCreateProject={onCreateProject}
         onOpenShortcuts={onOpenShortcuts}
         onOpenJournal={onOpenJournal}
@@ -101,6 +113,26 @@ export function AppLayout({
             <h1 className="view-title">{viewName}</h1>
           </div>
           <div className="header-right">
+            {currentView === "project" && currentProjectId && onToggleProjectViewMode && (
+              <div className="view-mode-toggle">
+                <button
+                  className={`view-mode-btn ${projectViewMode === "standard" ? "active" : ""}`}
+                  onClick={() => onToggleProjectViewMode(currentProjectId, "standard")}
+                  title="Standard sections (shared)"
+                >
+                  <LayoutList size={16} />
+                  <span>Standard</span>
+                </button>
+                <button
+                  className={`view-mode-btn ${projectViewMode === "custom" ? "active" : ""}`}
+                  onClick={() => onToggleProjectViewMode(currentProjectId, "custom")}
+                  title="Custom sections (project-specific)"
+                >
+                  <FolderKanban size={16} />
+                  <span>Custom</span>
+                </button>
+              </div>
+            )}
             <button
               className="import-button"
               onClick={onImport}

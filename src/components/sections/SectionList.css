@@ -192,11 +192,12 @@
 }
 
 .col-due-date {
-  width: 15%;
-  min-width: 120px;
+  width: 9%;
+  min-width: 100px;
 }
 
 .col-priority {
+  display: none;
   width: 10%;
   min-width: 80px;
 }
@@ -382,82 +383,47 @@
 }
 
 @media (max-width: 768px) {
-  .col-projects {
-    display: none;
-  }
-
-  .col-tags {
-    display: none;
-  }
-
-  .col-length {
-    display: none;
+  .section-list {
+    gap: 0;
   }
 
   .tasks-table {
     border-radius: 0;
     border-left: none;
     border-right: none;
+    border-top: none;
   }
 
-  .table-header-row th {
-    padding: 6px 8px;
-    font-size: 10px;
+  /* Hide table header on mobile - show simplified list */
+  .table-header-row {
+    display: none;
+  }
+
+  /* Hide all extra columns on mobile */
+  .col-projects,
+  .col-tags,
+  .col-length,
+  .col-priority,
+  .col-urgent,
+  .col-due-date,
+  .col-number {
+    display: none;
   }
 
   .col-task-name {
-    min-width: 150px;
-  }
-
-  .col-due-date {
-    min-width: 100px;
-  }
-
-  .col-priority {
-    min-width: 60px;
-  }
-
-  .col-urgent {
-    min-width: 50px;
-  }
-
-  .col-number {
-    width: 36px;
-    padding: 6px 4px;
+    width: 100% !important;
+    min-width: unset;
   }
 
   .add-section-button {
-    margin: 0 -1rem;
+    margin: 0;
     border-radius: 0;
     border-left: none;
     border-right: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .col-urgent {
-    display: none;
+    padding: 1rem;
   }
 
-  .col-priority {
-    display: none;
-  }
-
-  .col-number {
-    display: none;
-  }
-
-  .col-task-name {
-    min-width: 120px;
-    width: 70%;
-  }
-
-  .col-due-date {
-    min-width: 80px;
-    width: 30%;
-  }
-
-  .table-header-row th {
-    padding: 8px 6px;
+  .to-sort-table {
+    margin-bottom: 0;
   }
 }

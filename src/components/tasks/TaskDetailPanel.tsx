@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { Task, Project, Importance, Length } from "../../types";
 import "./TaskDetailPanel.css";
 
@@ -18,8 +18,8 @@ export function TaskDetailPanel({
 }: TaskDetailPanelProps) {
   const [name, setName] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [importance, setImportance] = useState<Importance>("normal");
-  const [length, setLength] = useState<Length>("medium");
+  const [importance, setImportance] = useState<Importance | null>(null);
+  const [length, setLength] = useState<Length | null>(null);
   const [projectId, setProjectId] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -66,13 +66,15 @@ export function TaskDetailPanel({
   };
 
   return (
-    <div className="task-detail-panel">
-      <div className="task-detail-header">
-        <h2>Task Details</h2>
-        <button onClick={onClose} className="close-button" aria-label="Close">
-          <X size={20} />
-        </button>
-      </div>
+    <>
+      <div className="task-detail-backdrop" onClick={onClose} />
+      <div className="task-detail-panel">
+        <div className="task-detail-header">
+          <button onClick={onClose} className="close-button" aria-label="Close">
+            <ChevronLeft size={20} />
+          </button>
+          <h2>Task Details</h2>
+        </div>
 
       <div className="task-detail-content">
         {/* Task Name */}
@@ -105,14 +107,16 @@ export function TaskDetailPanel({
         <div className="detail-section">
           <label className="detail-label">Priority</label>
           <select
-            value={importance}
+            value={importance ?? ""}
             onChange={(e) => {
-              const value = e.target.value as Importance;
-              setImportance(value);
-              handleSave("importance", value);
+              const value = e.target.value;
+              const newImportance = value === "" ? null : value as Importance;
+              setImportance(newImportance);
+              handleSave("importance", newImportance);
             }}
             className="detail-select"
           >
+            <option value=""></option>
             <option value="normal">Low</option>
             <option value="important">Medium</option>
             <option value="very_important">High</option>
@@ -123,14 +127,16 @@ export function TaskDetailPanel({
         <div className="detail-section">
           <label className="detail-label">Length</label>
           <select
-            value={length}
+            value={length ?? ""}
             onChange={(e) => {
-              const value = e.target.value as Length;
-              setLength(value);
-              handleSave("length", value);
+              const value = e.target.value;
+              const newLength = value === "" ? null : value as Length;
+              setLength(newLength);
+              handleSave("length", newLength);
             }}
             className="detail-select"
           >
+            <option value=""></option>
             <option value="short">Short</option>
             <option value="medium">Medium</option>
             <option value="long">Long</option>
@@ -201,5 +207,6 @@ export function TaskDetailPanel({
         </div>
       </div>
     </div>
+    </>
   );
 }
