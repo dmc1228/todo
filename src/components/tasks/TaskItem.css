@@ -1,6 +1,9 @@
 .task-row {
   cursor: pointer;
-  transition: background-color 0.1s ease;
+  transition:
+    background-color 0.1s ease,
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.2s ease;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -28,6 +31,8 @@
   cursor: grabbing;
   background-color: #e0e7ff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.4;
+  border: 2px dashed #6366f1;
 }
 
 .task-cell-number {
