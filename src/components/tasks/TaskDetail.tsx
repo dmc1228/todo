@@ -10,7 +10,7 @@ import {
   FileText,
   Trash2,
 } from "lucide-react";
-import { Task, Section, Project, Importance } from "../../types";
+import { Task, Section, Project, Importance, RecurrenceRule } from "../../types";
 import { format } from "date-fns";
 import "./TaskDetail.css";
 
@@ -36,6 +36,7 @@ export function TaskDetail({
   const [sectionId, setSectionId] = useState(task.section_id);
   const [projectId, setProjectId] = useState<string | null>(task.project_id);
   const [dueDate, setDueDate] = useState<string | null>(task.due_date);
+  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule>(task.recurrence_rule);
   const [tags, setTags] = useState<string[]>(task.tags);
   const [notes, setNotes] = useState(task.notes || "");
   const [tagInput, setTagInput] = useState("");
@@ -57,6 +58,7 @@ export function TaskDetail({
       if (sectionId !== task.section_id) updates.section_id = sectionId;
       if (projectId !== task.project_id) updates.project_id = projectId;
       if (dueDate !== task.due_date) updates.due_date = dueDate;
+      if (recurrenceRule !== task.recurrence_rule) updates.recurrence_rule = recurrenceRule;
       if (JSON.stringify(tags) !== JSON.stringify(task.tags))
         updates.tags = tags;
       if (notes !== (task.notes || "")) updates.notes = notes;
@@ -77,6 +79,7 @@ export function TaskDetail({
     sectionId,
     projectId,
     dueDate,
+    recurrenceRule,
     tags,
     notes,
     task,
@@ -247,6 +250,22 @@ export function TaskDetail({
                 onChange={(e) => setDueDate(e.target.value || null)}
                 className="detail-input"
               />
+            </div>
+
+            {/* Recurrence */}
+            <div className="detail-section">
+              <label className="detail-label">Repeat</label>
+              <select
+                value={recurrenceRule || ""}
+                onChange={(e) => setRecurrenceRule((e.target.value as RecurrenceRule) || null)}
+                className="detail-select"
+              >
+                <option value="">Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
             </div>
 
             <div className="detail-divider" />

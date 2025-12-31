@@ -321,11 +321,23 @@ export function SectionList({
     if (!activeTask) return;
 
     // Check if overId is a section
+    let targetSectionId: string | null = null;
     const overSection = sections.find((s) => s.id === overId);
-    if (overSection && activeTask.section_id !== overId) {
-      // Moving to a different section
-      const newSectionTasks = tasks.filter((t) => t.section_id === overId);
-      onMoveTaskToSection(activeTaskId, overId, newSectionTasks.length);
+
+    if (overSection) {
+      targetSectionId = overId;
+    } else {
+      // Check if overId is a task, get its section
+      const overTask = tasks.find((t) => t.id === overId);
+      if (overTask) {
+        targetSectionId = overTask.section_id;
+      }
+    }
+
+    // Move to different section if needed
+    if (targetSectionId && activeTask.section_id !== targetSectionId) {
+      const newSectionTasks = tasks.filter((t) => t.section_id === targetSectionId);
+      onMoveTaskToSection(activeTaskId, targetSectionId, newSectionTasks.length);
     }
   };
 
