@@ -201,3 +201,65 @@
     border-color: #6366f1;
   }
 }
+
+@media (max-width: 768px) {
+  .section-cell-header {
+    padding: 10px 12px;
+  }
+
+  .section-header-content {
+    padding-left: 0;
+    gap: 8px;
+  }
+
+  .section-name {
+    font-size: 14px;
+    padding: 4px 6px;
+  }
+
+  .section-add-task-cell {
+    padding: 6px 10px 4px 10px;
+  }
+
+  .section-add-task-input {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .empty-section-cell {
+    padding: 1.5rem 1rem;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-cell-header {
+    padding: 10px 8px;
+  }
+
+  .section-header-content {
+    gap: 6px;
+  }
+
+  .section-name {
+    font-size: 13px;
+    padding: 3px 4px;
+  }
+
+  .collapse-toggle {
+    padding: 2px;
+  }
+
+  .section-add-task-cell {
+    padding: 6px 8px 4px 8px;
+  }
+
+  .section-add-task-input {
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  .empty-section-cell {
+    padding: 1rem 0.5rem;
+  }
+}

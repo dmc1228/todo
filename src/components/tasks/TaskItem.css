@@ -24,6 +24,12 @@
   background-color: #c7d2fe;
 }
 
+.task-row.dragging {
+  cursor: grabbing;
+  background-color: #e0e7ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .task-cell-number {
   width: 50px;
   padding: 6px 12px;
@@ -70,8 +76,14 @@
 }
 
 .task-name {
-  flex: 1;
+  cursor: text;
   transition: all 0.3s ease;
+  /* Don't use flex: 1 so clicking empty space doesn't trigger edit */
+}
+
+.task-name-spacer {
+  flex: 1;
+  /* This fills the remaining space but clicking it won't trigger edit */
 }
 
 .task-name.strikethrough {
@@ -563,5 +575,100 @@
 @media (max-width: 768px) {
   .task-cell-project {
     display: none;
+  }
+
+  .task-cell-tags {
+    display: none;
+  }
+
+  .task-cell-length {
+    display: none;
+  }
+
+  .task-cell-name {
+    min-width: 150px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .task-cell-due-date {
+    min-width: 100px;
+    padding: 8px 8px;
+  }
+
+  .task-cell-priority {
+    min-width: 60px;
+    padding: 8px 6px;
+  }
+
+  .task-cell-urgent {
+    min-width: 50px;
+    padding: 8px 6px;
+  }
+
+  .task-cell-number {
+    width: 36px;
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .inline-select {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .inline-date-input {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .task-checkbox {
+    padding: 4px;
+  }
+
+  .task-drag-handle {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-cell-urgent {
+    display: none;
+  }
+
+  .task-cell-priority {
+    display: none;
+  }
+
+  .task-cell-number {
+    display: none;
+  }
+
+  .task-cell-name {
+    min-width: 120px;
+    padding: 10px 8px;
+  }
+
+  .task-cell-due-date {
+    min-width: 80px;
+    padding: 10px 6px;
+  }
+
+  .task-name {
+    font-size: 14px;
+  }
+
+  .inline-date-input {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+
+  .task-checkbox {
+    padding: 6px;
+  }
+
+  .checkbox-icon {
+    width: 20px;
+    height: 20px;
   }
 }

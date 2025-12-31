@@ -4,6 +4,8 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { SectionList } from "./components/sections/SectionList";
 import { TaskDetailPanel } from "./components/tasks/TaskDetailPanel";
 import { BatchEditToolbar } from "./components/tasks/BatchEditToolbar";
+import { SectionMoveDropdown } from "./components/tasks/SectionMoveDropdown";
+import { QuickAddModal } from "./components/tasks/QuickAddModal";
 import { Journal } from "./components/journal/Journal";
 import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
@@ -49,6 +51,8 @@ function AppContent() {
   const [searchValue, setSearchValue] = useState("");
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [lastDeletedTask, setLastDeletedTask] = useState<Task | null>(null);
+  const [sectionSelectorOpen, setSectionSelectorOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const { toasts, removeToast, addToast, success, error } = useToast();
 
   // Data hooks
@@ -181,9 +185,29 @@ function AppContent() {
       const result = await createTask(rawInput, sectionId, projects);
       if (!result) {
         error("Failed to create task");
+        return;
+      }
+
+      // Set importance based on priority section name
+      const section = sections.find((s) => s.id === sectionId);
+      if (section) {
+        const sectionNameLower = section.name.toLowerCase();
+        let importance: Task["importance"] | null = null;
+
+        if (sectionNameLower.includes("high priority")) {
+          importance = "very_important";
+        } else if (sectionNameLower.includes("medium priority")) {
+          importance = "important";
+        } else if (sectionNameLower.includes("low priority")) {
+          importance = "normal";
+        }
+
+        if (importance) {
+          await updateTask(result.id, { importance });
+        }
       }
     },
-    [createTask, projects, error],
+    [createTask, updateTask, sections, projects, error],
   );
 
   const handleCompleteTask = useCallback(
@@ -255,21 +279,37 @@ function AppContent() {
         setLastSelectedTaskId(taskId);
       } else if (isShift && lastSelectedTaskId) {
         // Range select from lastSelectedTaskId to taskId
-        const lastIndex = filteredTasks.findIndex(
-          (t) => t.id === lastSelectedTaskId,
-        );
-        const currentIndex = filteredTasks.findIndex((t) => t.id === taskId);
+        // Only select tasks within the same section
+        const lastTask = tasks.find((t) => t.id === lastSelectedTaskId);
+        const currentTask = tasks.find((t) => t.id === taskId);
 
-        if (lastIndex !== -1 && currentIndex !== -1) {
-          const start = Math.min(lastIndex, currentIndex);
-          const end = Math.max(lastIndex, currentIndex);
-          const newSelection = new Set(selectedTaskIds);
+        if (lastTask && currentTask && lastTask.section_id === currentTask.section_id) {
+          // Get tasks in this section only
+          const sectionTasks = filteredTasks.filter(
+            (t) => t.section_id === currentTask.section_id
+          );
+          const lastIndex = sectionTasks.findIndex(
+            (t) => t.id === lastSelectedTaskId,
+          );
+          const currentIndex = sectionTasks.findIndex((t) => t.id === taskId);
 
-          for (let i = start; i <= end; i++) {
-            newSelection.add(filteredTasks[i].id);
+          if (lastIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            // Clear previous selection and select only the range
+            const newSelection = new Set<string>();
+
+            for (let i = start; i <= end; i++) {
+              newSelection.add(sectionTasks[i].id);
+            }
+
+            setSelectedTaskIds(newSelection);
           }
-
-          setSelectedTaskIds(newSelection);
+        } else {
+          // Tasks are in different sections, just select the clicked task
+          setSelectedTaskIds(new Set());
+          setSelectedTaskId(taskId);
+          setLastSelectedTaskId(taskId);
         }
       } else {
         // Normal single click - clear multi-selection and select single task
@@ -278,7 +318,7 @@ function AppContent() {
         setLastSelectedTaskId(taskId);
       }
     },
-    [filteredTasks, lastSelectedTaskId, selectedTaskIds],
+    [filteredTasks, tasks, lastSelectedTaskId],
   );
 
   const handleCloseTaskDetail = useCallback(() => {
@@ -326,6 +366,56 @@ function AppContent() {
   const handleClearSelection = useCallback(() => {
     setSelectedTaskIds(new Set());
   }, []);
+
+  const handleMoveSelectedTaskToSection = useCallback(
+    async (sectionId: string) => {
+      if (!selectedTaskId) return;
+
+      const task = tasks.find((t) => t.id === selectedTaskId);
+      if (!task || task.section_id === sectionId) return;
+
+      // Get the position at the end of the target section
+      const sectionTasks = tasks.filter((t) => t.section_id === sectionId);
+      const newPosition =
+        sectionTasks.length > 0
+          ? Math.max(...sectionTasks.map((t) => t.position)) + 1
+          : 0;
+
+      await moveTaskToSection(selectedTaskId, sectionId, newPosition);
+      success("Task moved");
+    },
+    [selectedTaskId, tasks, moveTaskToSection, success],
+  );
+
+  const handleQuickAddTask = useCallback(
+    async (taskData: {
+      name: string;
+      sectionId: string;
+      dueDate: string | null;
+      importance: Task["importance"];
+      urgent: boolean;
+      length: Task["length"];
+      tags: string[];
+      projectId: string | null;
+    }) => {
+      const result = await createTask(taskData.name, taskData.sectionId, projects);
+      if (result) {
+        // Update with additional properties
+        await updateTask(result.id, {
+          due_date: taskData.dueDate,
+          importance: taskData.importance,
+          urgent: taskData.urgent,
+          length: taskData.length,
+          tags: taskData.tags,
+          project_id: taskData.projectId,
+        });
+        success("Task created");
+      } else {
+        error("Failed to create task");
+      }
+    },
+    [createTask, updateTask, projects, success, error],
+  );
 
   const handleImport = useCallback(
     async (
@@ -459,6 +549,14 @@ function AppContent() {
         // Will focus tags input in task detail panel
         // Open tags input - TODO: implement
       },
+      onOpenSectionSelector: () => {
+        if (selectedTaskId) {
+          setSectionSelectorOpen(true);
+        }
+      },
+      onOpenQuickAdd: () => {
+        setQuickAddOpen(true);
+      },
       onSelectNext: () => {
         const currentIndex = filteredTasks.findIndex(
           (t) => t.id === selectedTaskId,
@@ -490,6 +588,21 @@ function AppContent() {
         if (selectedTaskId) {
           setDetailPanelTaskId(selectedTaskId);
         }
+      },
+      onGoToHome: () => {
+        handleViewChange("home");
+      },
+      onGoToAllTasks: () => {
+        handleViewChange("all");
+      },
+      onGoToDayPlan: () => {
+        handleViewChange("today");
+      },
+      onGoToUrgentImportant: () => {
+        handleViewChange("urgent_important");
+      },
+      onGoToJournal: () => {
+        handleViewChange("journal");
       },
     },
   });
@@ -613,6 +726,26 @@ function AppContent() {
         onUpdate={handleBatchUpdate}
         onDelete={handleBatchDelete}
         onClearSelection={handleClearSelection}
+      />
+
+      <SectionMoveDropdown
+        isOpen={sectionSelectorOpen}
+        sections={sections}
+        currentSectionId={
+          selectedTaskId
+            ? tasks.find((t) => t.id === selectedTaskId)?.section_id || null
+            : null
+        }
+        onSelectSection={handleMoveSelectedTaskToSection}
+        onClose={() => setSectionSelectorOpen(false)}
+      />
+
+      <QuickAddModal
+        isOpen={quickAddOpen}
+        sections={sections}
+        projects={projects}
+        onClose={() => setQuickAddOpen(false)}
+        onSubmit={handleQuickAddTask}
       />
 
       <ToastContainer toasts={toasts} onClose={removeToast} />

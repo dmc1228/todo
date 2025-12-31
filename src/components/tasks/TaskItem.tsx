@@ -63,6 +63,40 @@ export function TaskItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Custom listeners that allow dragging from anywhere on the row
+  // except interactive elements (inputs, selects, buttons, text)
+  const rowListeners = useMemo(() => {
+    if (!listeners) return undefined;
+
+    const wrappedListeners: typeof listeners = {};
+
+    for (const [key, handler] of Object.entries(listeners)) {
+      if (key === "onPointerDown" || key === "onKeyDown") {
+        wrappedListeners[key as keyof typeof listeners] = ((
+          event: React.PointerEvent | React.KeyboardEvent,
+        ) => {
+          const target = event.target as HTMLElement;
+          // Don't start drag on interactive elements or text
+          if (
+            target.closest("input") ||
+            target.closest("select") ||
+            target.closest("button") ||
+            target.closest(".task-name") ||
+            target.closest(".tag-pill") ||
+            target.closest('[data-no-dnd="true"]')
+          ) {
+            return;
+          }
+          (handler as (event: React.PointerEvent | React.KeyboardEvent) => void)(event);
+        }) as typeof handler;
+      } else {
+        wrappedListeners[key as keyof typeof listeners] = handler;
+      }
+    }
+
+    return wrappedListeners;
+  }, [listeners]);
+
   const handleCheckboxClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsCompleting(true);
@@ -139,11 +173,13 @@ export function TaskItem({
 
   const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddTag();
       // Keep isEditingTags true to allow adding multiple tags
     } else if (e.key === "Escape") {
+      e.preventDefault();
       setIsEditingTags(false);
       setTagInput("");
     }
@@ -171,10 +207,13 @@ export function TaskItem({
 
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
+    // Stop the native event from reaching useHotkeys
+    e.nativeEvent.stopImmediatePropagation();
     if (e.key === "Enter") {
       e.preventDefault();
       handleNameSave();
     } else if (e.key === "Escape") {
+      e.preventDefault();
       setNameInput(task.name);
       setIsEditingName(false);
     }
@@ -184,7 +223,7 @@ export function TaskItem({
     <motion.tr
       ref={setNodeRef}
       style={style}
-      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""}`}
+      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isDragging ? "dragging" : ""}`}
       onClick={(e) => onSelect(e)}
       initial={{ opacity: 0 }}
       animate={{
@@ -192,6 +231,8 @@ export function TaskItem({
       }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
+      {...attributes}
+      {...rowListeners}
     >
       <td className="task-cell-number">
         <span className="task-number">{rowNumber}</span>
@@ -230,14 +271,17 @@ export function TaskItem({
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span
-              className={`task-name ${isCompleting ? "strikethrough" : ""}`}
-              onClick={handleNameClick}
-            >
-              {task.name}
-            </span>
+            <>
+              <span
+                className={`task-name ${isCompleting ? "strikethrough" : ""}`}
+                onClick={handleNameClick}
+              >
+                {task.name}
+              </span>
+              <div className="task-name-spacer" />
+            </>
           )}
-          <div className="task-drag-handle" {...attributes} {...listeners}>
+          <div className="task-drag-handle">
             <GripVertical size={14} />
           </div>
         </div>

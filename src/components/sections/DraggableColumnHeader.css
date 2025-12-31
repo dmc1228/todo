@@ -1,0 +1,53 @@
+.draggable-col-header {
+  position: relative;
+  background: inherit;
+}
+
+.draggable-col-header.dragging {
+  background: #f3f4f6;
+}
+
+.draggable-col-header .col-header-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.col-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: #9ca3af;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.draggable-col-header:hover .col-drag-handle {
+  opacity: 1;
+}
+
+.col-drag-handle:active {
+  cursor: grabbing;
+}
+
+.col-header-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  .draggable-col-header.dragging {
+    background: #374151;
+  }
+
+  .col-drag-handle {
+    color: #6b7280;
+  }
+
+  .col-header-label {
+    color: #9ca3af;
+  }
+}

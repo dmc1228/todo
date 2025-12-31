@@ -255,3 +255,75 @@ button:focus-visible {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better touch targets */
+  button,
+  input,
+  select,
+  a {
+    min-height: 44px;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Smoother scrolling on iOS */
+  .main-content,
+  .sidebar-nav {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even larger touch targets for small screens */
+  button,
+  a {
+    min-height: 48px;
+  }
+
+  /* Adjust typography */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+}
+
+/* Touch device specific styles */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices to prevent sticky hover states */
+  .task-row:hover {
+    background-color: inherit;
+  }
+
+  .task-row.selected:hover {
+    background-color: #eff6ff;
+  }
+
+  /* Make interactive elements more touch-friendly */
+  .task-checkbox {
+    padding: 8px;
+  }
+}

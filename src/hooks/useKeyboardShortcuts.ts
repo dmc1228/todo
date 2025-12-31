@@ -8,11 +8,18 @@ interface KeyboardShortcutHandlers {
   onOpenDatePicker: () => void;
   onOpenProjectSelector: () => void;
   onOpenTagsInput: () => void;
+  onOpenSectionSelector: () => void;
+  onOpenQuickAdd: () => void;
   onSelectNext: () => void;
   onSelectPrevious: () => void;
   onNewTask: () => void;
   onEscape: () => void;
   onOpenDetail: () => void;
+  onGoToHome: () => void;
+  onGoToAllTasks: () => void;
+  onGoToDayPlan: () => void;
+  onGoToUrgentImportant: () => void;
+  onGoToJournal: () => void;
 }
 
 interface UseKeyboardShortcutsProps {
@@ -58,6 +65,32 @@ export function useKeyboardShortcuts({
   useHotkeys("shift+/", (e) => {
     e.preventDefault();
     setShowShortcutsHelp(true);
+  });
+
+  // Navigation shortcuts
+  useHotkeys("mod+1", (e) => {
+    e.preventDefault();
+    handlers.onGoToHome();
+  });
+
+  useHotkeys("mod+2", (e) => {
+    e.preventDefault();
+    handlers.onGoToAllTasks();
+  });
+
+  useHotkeys("mod+3", (e) => {
+    e.preventDefault();
+    handlers.onGoToDayPlan();
+  });
+
+  useHotkeys("mod+4", (e) => {
+    e.preventDefault();
+    handlers.onGoToUrgentImportant();
+  });
+
+  useHotkeys("mod+9", (e) => {
+    e.preventDefault();
+    handlers.onGoToJournal();
   });
 
   // Task-selected shortcuts (only when a task is selected)
@@ -161,10 +194,10 @@ export function useKeyboardShortcuts({
 
       // If tab was pressed, check for follow-up keys
       if (tabPressed) {
-        // Tab + Q: Quick add task (works without selection)
+        // Tab + Q: Open quick add modal (works without selection)
         if (e.key.toLowerCase() === "q") {
           e.preventDefault();
-          handlers.onNewTask();
+          handlers.onOpenQuickAdd();
           setTabPressed(false);
           if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
           return;
@@ -196,8 +229,8 @@ export function useKeyboardShortcuts({
               handlers.onOpenTagsInput();
               setTabPressed(false);
               break;
-            case "s":
-              // Section selector - TODO: implement
+            case "u":
+              handlers.onOpenSectionSelector();
               setTabPressed(false);
               break;
           }

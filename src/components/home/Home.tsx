@@ -109,9 +109,9 @@ export function Home({
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        // Get forecast data for specific point: -149.827, 61.201
+        // Get forecast data for specific point: -149.814, 61.22 (Anchorage)
         const pointResponse = await fetch(
-          "https://api.weather.gov/points/61.201,-149.827",
+          "https://api.weather.gov/points/61.22,-149.814",
         );
 
         if (pointResponse.ok) {

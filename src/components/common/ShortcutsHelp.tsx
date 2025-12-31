@@ -19,6 +19,16 @@ interface ShortcutCategory {
 
 const shortcuts: ShortcutCategory[] = [
   {
+    title: "Navigation",
+    shortcuts: [
+      { keys: ["⌘", "1"], description: "Go to Home" },
+      { keys: ["⌘", "2"], description: "Go to All Tasks" },
+      { keys: ["⌘", "3"], description: "Go to Day Plan" },
+      { keys: ["⌘", "4"], description: "Go to Urgent & Important" },
+      { keys: ["⌘", "9"], description: "Go to Journal" },
+    ],
+  },
+  {
     title: "Global",
     shortcuts: [
       { keys: ["⇥", "Q"], description: "Quick add task" },
@@ -43,7 +53,7 @@ const shortcuts: ShortcutCategory[] = [
       { keys: ["⇥", "D"], description: "Set due date" },
       { keys: ["⇥", "P"], description: "Assign to project" },
       { keys: ["⇥", "T"], description: "Add tags" },
-      { keys: ["⇥", "S"], description: "Move to section" },
+      { keys: ["⇥", "U"], description: "Move to section" },
     ],
   },
   {
