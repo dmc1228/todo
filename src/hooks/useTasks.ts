@@ -122,11 +122,16 @@ export function useTasks(): UseTasksReturn {
             due_date: parsed.dueDate
               ? parsed.dueDate.toISOString().split("T")[0]
               : null,
+            strict_due_date: false,
             importance:
               parsed.importance !== "normal" ? parsed.importance : null,
             urgent: parsed.urgent || null,
             length: null,
             position: maxPosition + 1,
+            recurrence_rule: null,
+            notes: null,
+            completed_at: null,
+            archived: false,
             user_id: user.id,
           },
         ])
@@ -235,12 +240,15 @@ export function useTasks(): UseTasksReturn {
           project_id: task.project_id,
           tags: task.tags,
           due_date: task.due_date,
+          strict_due_date: task.strict_due_date || false,
           notes: task.notes,
           importance: task.importance,
           urgent: task.urgent,
           length: task.length,
           position: task.position,
           recurrence_rule: task.recurrence_rule,
+          completed_at: task.completed_at,
+          archived: task.archived || false,
           user_id: user!.id,
         },
       ]);
@@ -288,10 +296,15 @@ export function useTasks(): UseTasksReturn {
               project_id: task.project_id,
               tags: task.tags,
               due_date: nextDueDate,
+              strict_due_date: task.strict_due_date || false,
               notes: task.notes,
               importance: task.importance,
+              urgent: task.urgent,
+              length: task.length,
               position: task.position,
               recurrence_rule: task.recurrence_rule,
+              completed_at: null,
+              archived: false,
               user_id: user!.id,
             },
           ]);
