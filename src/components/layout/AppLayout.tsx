@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { Menu, Upload, ChevronRight, LayoutList, FolderKanban } from "lucide-react";
+import { Menu, Upload, ChevronRight, LayoutList, FolderKanban, Eye, EyeOff } from "lucide-react";
 import { Sidebar } from "./Sidebar";
-import { Project, Task, Section, ProjectViewMode } from "../../types";
+import { Project, Task, Section, ProjectViewMode, ShoppingViewMode } from "../../types";
 import { ViewType } from "../../hooks/useTaskFilter";
 import "./AppLayout.css";
 
@@ -28,6 +28,10 @@ interface AppLayoutProps {
 
   // Project view mode
   onToggleProjectViewMode?: (projectId: string, newMode: ProjectViewMode) => void;
+
+  // Shopping view mode
+  shoppingViewMode?: ShoppingViewMode;
+  onToggleShoppingViewMode?: (mode: ShoppingViewMode) => void;
 
   // Main content
   viewName: string;
@@ -57,6 +61,8 @@ export function AppLayout({
   onOpenJournal,
   onImport,
   onToggleProjectViewMode,
+  shoppingViewMode,
+  onToggleShoppingViewMode,
   viewName,
   children,
   detailPanel,
@@ -113,6 +119,26 @@ export function AppLayout({
             <h1 className="view-title">{viewName}</h1>
           </div>
           <div className="header-right">
+            {currentView === "shopping" && onToggleShoppingViewMode && (
+              <div className="view-mode-toggle">
+                <button
+                  className={`view-mode-btn ${shoppingViewMode === "incomplete-only" ? "active" : ""}`}
+                  onClick={() => onToggleShoppingViewMode("incomplete-only")}
+                  title="Show incomplete tasks only"
+                >
+                  <EyeOff size={16} />
+                  <span>Active Only</span>
+                </button>
+                <button
+                  className={`view-mode-btn ${shoppingViewMode === "show-all-strikethrough" ? "active" : ""}`}
+                  onClick={() => onToggleShoppingViewMode("show-all-strikethrough")}
+                  title="Show all tasks with completed crossed out"
+                >
+                  <Eye size={16} />
+                  <span>Show All</span>
+                </button>
+              </div>
+            )}
             {currentView === "project" && currentProjectId && onToggleProjectViewMode && (
               <div className="view-mode-toggle">
                 <button

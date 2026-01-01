@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
+  FolderInput,
 } from "lucide-react";
 import { Task, Project } from "../../types";
 import "./TaskItem.css";
@@ -20,6 +21,7 @@ interface TaskItemProps {
   onSelect: (e?: React.MouseEvent) => void;
   onComplete: () => void;
   onUpdate: (id: string, updates: Partial<Task>) => void;
+  onOpenSectionMove?: (taskId: string) => void;
   rowNumber: number;
   columnWidths?: {
     taskName: number;
@@ -40,6 +42,7 @@ export function TaskItem({
   onSelect,
   onComplete,
   onUpdate,
+  onOpenSectionMove,
   rowNumber,
   columnWidths,
 }: TaskItemProps) {
@@ -228,11 +231,21 @@ export function TaskItem({
     }
   };
 
+  const handleSectionMoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onOpenSectionMove) {
+      onOpenSectionMove(task.id);
+    }
+  };
+
+  // Check if task is completed (for shopping list strikethrough view)
+  const isCompleted = !!task.completed_at;
+
   return (
     <motion.tr
       ref={setNodeRef}
       style={style}
-      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isDragging ? "dragging" : ""}`}
+      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isCompleted ? "completed" : ""} ${isDragging ? "dragging" : ""}`}
       onClick={(e) => onSelect(e)}
       initial={{ opacity: 0 }}
       animate={{
@@ -259,7 +272,7 @@ export function TaskItem({
             onClick={handleCheckboxClick}
             aria-label="Complete task"
           >
-            {isCompleting ? (
+            {isCompleting || isCompleted ? (
               <CheckCircle2 size={18} className="checkbox-icon checked" />
             ) : (
               <Circle size={18} className="checkbox-icon" />
@@ -281,12 +294,20 @@ export function TaskItem({
             />
           ) : (
             <span
-              className={`task-name ${isCompleting ? "strikethrough" : ""}`}
+              className={`task-name ${isCompleting || isCompleted ? "strikethrough" : ""}`}
               onClick={handleNameClick}
             >
               {task.name}
             </span>
           )}
+          <button
+            className="mobile-section-move-btn"
+            onClick={handleSectionMoveClick}
+            aria-label="Move to section"
+            title="Move to section"
+          >
+            <FolderInput size={18} />
+          </button>
           <div className="task-drag-handle">
             <GripVertical size={14} />
           </div>
