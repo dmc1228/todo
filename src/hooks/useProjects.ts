@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { Project } from "../types";
+import { Project, ProjectCollaborator } from "../types";
 import { useAuth } from "./useAuth";
 
 interface UseProjectsReturn {
@@ -11,6 +11,9 @@ interface UseProjectsReturn {
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   getOrCreateProject: (name: string) => Promise<Project | null>;
+  addCollaborator: (projectId: string, email: string) => Promise<boolean>;
+  removeCollaborator: (projectId: string, collaboratorId: string) => Promise<boolean>;
+  fetchCollaborators: (projectId: string) => Promise<ProjectCollaborator[]>;
 }
 
 export function useProjects(): UseProjectsReturn {
@@ -167,6 +170,73 @@ export function useProjects(): UseProjectsReturn {
     }
   };
 
+  const fetchCollaborators = async (projectId: string): Promise<ProjectCollaborator[]> => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .rpc('get_project_collaborators', { p_project_id: projectId });
+
+      if (fetchError) throw fetchError;
+
+      return data || [];
+    } catch (err) {
+      console.error("Fetch collaborators failed:", err);
+      setError(err as Error);
+      return [];
+    }
+  };
+
+  const addCollaborator = async (projectId: string, email: string): Promise<boolean> => {
+    try {
+      const { data, error: rpcError } = await supabase
+        .rpc('add_project_collaborator_by_email', {
+          p_project_id: projectId,
+          p_email: email,
+          p_role: 'editor'
+        });
+
+      if (rpcError) {
+        console.error("Add collaborator RPC error:", rpcError);
+        return false;
+      }
+
+      if (data && !data.success) {
+        console.error("Add collaborator failed:", data.error);
+        return false;
+      }
+
+      // Refresh projects to show updated collaborator list
+      await fetchProjects();
+      return true;
+    } catch (err) {
+      console.error("Add collaborator failed:", err);
+      setError(err as Error);
+      return false;
+    }
+  };
+
+  const removeCollaborator = async (projectId: string, collaboratorId: string): Promise<boolean> => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('project_collaborators')
+        .delete()
+        .eq('id', collaboratorId)
+        .eq('project_id', projectId);
+
+      if (deleteError) {
+        console.error("Remove collaborator error:", deleteError);
+        return false;
+      }
+
+      // Refresh projects to show updated collaborator list
+      await fetchProjects();
+      return true;
+    } catch (err) {
+      console.error("Remove collaborator failed:", err);
+      setError(err as Error);
+      return false;
+    }
+  };
+
   return {
     projects,
     loading,
@@ -175,5 +245,8 @@ export function useProjects(): UseProjectsReturn {
     updateProject,
     deleteProject,
     getOrCreateProject,
+    addCollaborator,
+    removeCollaborator,
+    fetchCollaborators,
   };
 }

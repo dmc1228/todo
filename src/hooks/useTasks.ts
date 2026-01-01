@@ -5,6 +5,10 @@ import { parseQuickAdd, getProjectFromName } from "../lib/taskParser";
 import { calculateNextDueDate } from "../lib/recurrence";
 import { useAuth } from "./useAuth";
 
+interface UseTasksOptions {
+  includeCompleted?: boolean;
+}
+
 interface UseTasksReturn {
   tasks: Task[];
   loading: boolean;
@@ -28,7 +32,8 @@ interface UseTasksReturn {
   ) => Promise<void>;
 }
 
-export function useTasks(): UseTasksReturn {
+export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
+  const { includeCompleted = false } = options;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -63,14 +68,20 @@ export function useTasks(): UseTasksReturn {
     return () => {
       channel.unsubscribe();
     };
-  }, [user]);
+  }, [user, includeCompleted]);
 
   const fetchTasks = async () => {
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from("tasks")
-        .select("*")
-        .eq("archived", false)
+        .select("*");
+
+      // Only filter by archived if not including completed tasks
+      if (!includeCompleted) {
+        query = query.eq("archived", false);
+      }
+
+      const { data, error: fetchError } = await query
         .order("position", { ascending: true });
 
       if (fetchError) throw fetchError;

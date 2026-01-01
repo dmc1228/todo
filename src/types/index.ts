@@ -5,6 +5,7 @@ export type Length = "short" | "medium" | "long";
 export type RecurrenceRule = "daily" | "weekly" | "monthly" | "yearly" | null;
 export type SectionContext = "main" | "shopping" | string; // string for "project-{id}"
 export type ProjectViewMode = "standard" | "custom";
+export type ShoppingViewMode = "incomplete-only" | "show-all-strikethrough";
 
 export interface Section {
   id: string;
@@ -15,6 +16,14 @@ export interface Section {
   created_at: string;
 }
 
+export interface ProjectCollaborator {
+  id: string;
+  user_id: string;
+  role: 'owner' | 'editor';
+  email: string;
+  created_at: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -22,6 +31,7 @@ export interface Project {
   view_mode: ProjectViewMode; // 'standard' uses main sections, 'custom' uses project-specific sections
   user_id: string;
   created_at: string;
+  collaborators?: ProjectCollaborator[];
 }
 
 export interface Reminder {

@@ -238,11 +238,14 @@ export function TaskItem({
     }
   };
 
+  // Check if task is completed (for shopping list strikethrough view)
+  const isCompleted = !!task.completed_at;
+
   return (
     <motion.tr
       ref={setNodeRef}
       style={style}
-      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isDragging ? "dragging" : ""}`}
+      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isCompleted ? "completed" : ""} ${isDragging ? "dragging" : ""}`}
       onClick={(e) => onSelect(e)}
       initial={{ opacity: 0 }}
       animate={{
@@ -269,7 +272,7 @@ export function TaskItem({
             onClick={handleCheckboxClick}
             aria-label="Complete task"
           >
-            {isCompleting ? (
+            {isCompleting || isCompleted ? (
               <CheckCircle2 size={18} className="checkbox-icon checked" />
             ) : (
               <Circle size={18} className="checkbox-icon" />
@@ -291,7 +294,7 @@ export function TaskItem({
             />
           ) : (
             <span
-              className={`task-name ${isCompleting ? "strikethrough" : ""}`}
+              className={`task-name ${isCompleting || isCompleted ? "strikethrough" : ""}`}
               onClick={handleNameClick}
             >
               {task.name}

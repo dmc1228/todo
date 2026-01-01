@@ -55,7 +55,8 @@ function AppContent() {
   const [lastDeletedTask, setLastDeletedTask] = useState<Task | null>(null);
   const [sectionSelectorOpen, setSectionSelectorOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const { toasts, removeToast, addToast, success, error } = useToast();
+  const [shoppingViewMode, setShoppingViewMode] = useState<"incomplete-only" | "show-all-strikethrough">("incomplete-only");
+  const { toasts, removeToast, addToast, success, error} = useToast();
 
   // Data hooks
   const {
@@ -76,7 +77,9 @@ function AppContent() {
     undoCompleteTask,
     reorderTasks,
     moveTaskToSection,
-  } = useTasks();
+  } = useTasks({
+    includeCompleted: currentView === "shopping" && shoppingViewMode === "show-all-strikethrough"
+  });
   const { projects, loading: projectsLoading, createProject, updateProject } = useProjects();
   const {
     reminders,
@@ -831,6 +834,8 @@ function AppContent() {
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
         onToggleProjectViewMode={handleToggleProjectViewMode}
+        shoppingViewMode={shoppingViewMode}
+        onToggleShoppingViewMode={setShoppingViewMode}
         viewName={getViewName()}
       >
         {isLoading ? (
