@@ -21,6 +21,7 @@ interface SectionProps {
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onUpdateSection: (id: string, updates: Partial<SectionType>) => void;
   onAddTask: (sectionId: string, rawInput: string) => void;
+  onOpenSectionMove?: (taskId: string) => void;
   dragHandleProps?: any;
   columnWidths?: {
     taskName: number;
@@ -44,6 +45,7 @@ export function Section({
   onUpdateTask,
   onUpdateSection,
   onAddTask,
+  onOpenSectionMove,
   dragHandleProps: _dragHandleProps,
   columnWidths,
 }: SectionProps) {
@@ -232,6 +234,7 @@ export function Section({
                   onSelect={(e) => onSelectTask(task.id, e)}
                   onComplete={() => onCompleteTask(task.id)}
                   onUpdate={onUpdateTask}
+                  onOpenSectionMove={onOpenSectionMove}
                   rowNumber={index + 1}
                   columnWidths={columnWidths}
                 />

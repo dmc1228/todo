@@ -42,6 +42,7 @@ interface SectionListProps {
   ) => void;
   onAddSection: () => void;
   onAddTask: (sectionId: string, rawInput: string) => void;
+  onOpenSectionMove?: (taskId: string) => void;
 }
 
 interface SortableSectionProps {
@@ -55,6 +56,7 @@ interface SortableSectionProps {
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onUpdateSection: (id: string, updates: Partial<SectionType>) => void;
   onAddTask: (sectionId: string, rawInput: string) => void;
+  onOpenSectionMove?: (taskId: string) => void;
   columnWidths: {
     taskName: number;
     dueDate: number;
@@ -77,6 +79,7 @@ function SortableSection({
   onUpdateTask,
   onUpdateSection,
   onAddTask,
+  onOpenSectionMove,
   columnWidths,
 }: SortableSectionProps) {
   const { attributes, listeners } = useSortable({ id: section.id });
@@ -93,6 +96,7 @@ function SortableSection({
       onUpdateTask={onUpdateTask}
       onUpdateSection={onUpdateSection}
       onAddTask={onAddTask}
+      onOpenSectionMove={onOpenSectionMove}
       dragHandleProps={{ ...attributes, ...listeners }}
       columnWidths={columnWidths}
     />
@@ -132,6 +136,7 @@ export function SectionList({
   onMoveTaskToSection,
   onAddSection,
   onAddTask,
+  onOpenSectionMove,
 }: SectionListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"task" | "section" | null>(null);
@@ -531,6 +536,7 @@ export function SectionList({
                   onUpdateTask={onUpdateTask}
                   onUpdateSection={onUpdateSection}
                   onAddTask={onAddTask}
+                  onOpenSectionMove={onOpenSectionMove}
                   columnWidths={columnWidths}
                 />
               </SortableContext>
@@ -891,6 +897,7 @@ export function SectionList({
                   onUpdateTask={onUpdateTask}
                   onUpdateSection={onUpdateSection}
                   onAddTask={onAddTask}
+                  onOpenSectionMove={onOpenSectionMove}
                   columnWidths={columnWidths}
                 />
               ))}

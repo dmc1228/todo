@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
+  FolderInput,
 } from "lucide-react";
 import { Task, Project } from "../../types";
 import "./TaskItem.css";
@@ -20,6 +21,7 @@ interface TaskItemProps {
   onSelect: (e?: React.MouseEvent) => void;
   onComplete: () => void;
   onUpdate: (id: string, updates: Partial<Task>) => void;
+  onOpenSectionMove?: (taskId: string) => void;
   rowNumber: number;
   columnWidths?: {
     taskName: number;
@@ -40,6 +42,7 @@ export function TaskItem({
   onSelect,
   onComplete,
   onUpdate,
+  onOpenSectionMove,
   rowNumber,
   columnWidths,
 }: TaskItemProps) {
@@ -228,6 +231,13 @@ export function TaskItem({
     }
   };
 
+  const handleSectionMoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onOpenSectionMove) {
+      onOpenSectionMove(task.id);
+    }
+  };
+
   return (
     <motion.tr
       ref={setNodeRef}
@@ -287,6 +297,14 @@ export function TaskItem({
               {task.name}
             </span>
           )}
+          <button
+            className="mobile-section-move-btn"
+            onClick={handleSectionMoveClick}
+            aria-label="Move to section"
+            title="Move to section"
+          >
+            <FolderInput size={18} />
+          </button>
           <div className="task-drag-handle">
             <GripVertical size={14} />
           </div>

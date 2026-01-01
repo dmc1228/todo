@@ -680,6 +680,39 @@
     font-size: 15px;
     padding: 0;
   }
+
+  .mobile-section-move-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    margin: -8px 0;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .mobile-section-move-btn:active {
+    background-color: #e5e7eb;
+    color: #374151;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Show section move button on desktop with adjusted styling */
+  .mobile-section-move-btn {
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .task-row:hover .mobile-section-move-btn {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 768px) and (prefers-color-scheme: dark) {
@@ -697,5 +730,14 @@
 
   .task-name-container::after {
     border-color: #6b7280;
+  }
+
+  .mobile-section-move-btn {
+    color: #9ca3af;
+  }
+
+  .mobile-section-move-btn:active {
+    background-color: #374151;
+    color: #d1d5db;
   }
 }

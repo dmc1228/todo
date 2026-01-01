@@ -486,6 +486,11 @@ function AppContent() {
     setDetailPanelTaskId(null);
   }, []);
 
+  const handleOpenSectionMove = useCallback((taskId: string) => {
+    setSelectedTaskId(taskId);
+    setSectionSelectorOpen(true);
+  }, []);
+
   const handleBatchUpdate = useCallback(
     async (updates: Partial<Task>) => {
       const selectedIds = Array.from(selectedTaskIds);
@@ -863,6 +868,7 @@ function AppContent() {
             onMoveTaskToSection={moveTaskToSection}
             onAddSection={handleCreateSection}
             onAddTask={handleAddTask}
+            onOpenSectionMove={handleOpenSectionMove}
           />
         )}
       </AppLayout>
