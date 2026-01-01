@@ -104,12 +104,12 @@ export function useTasks(): UseTasksReturn {
         }
       }
 
-      // Get the highest position in this section
+      // Get the minimum position in this section to insert at the top
       const sectionTasks = tasks.filter((t) => t.section_id === sectionId);
-      const maxPosition =
+      const minPosition =
         sectionTasks.length > 0
-          ? Math.max(...sectionTasks.map((t) => t.position))
-          : -1;
+          ? Math.min(...sectionTasks.map((t) => t.position))
+          : 0;
 
       const { data, error: createError } = await supabase
         .from("tasks")
@@ -127,7 +127,7 @@ export function useTasks(): UseTasksReturn {
               parsed.importance !== "normal" ? parsed.importance : null,
             urgent: parsed.urgent || false,
             length: null,
-            position: maxPosition + 1,
+            position: minPosition - 1,
             recurrence_rule: null,
             notes: null,
             completed_at: null,
