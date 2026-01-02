@@ -52,6 +52,28 @@
   min-width: 300px;
 }
 
+/* Shopping view: make item column take more space */
+.task-row.shopping-view .task-cell-name {
+  width: 70%;
+}
+
+.task-row.shopping-view .task-cell-due-date {
+  width: 30%;
+}
+
+/* Swipe gesture feedback */
+.task-row.swiping {
+  cursor: grabbing;
+  user-select: none;
+  background: linear-gradient(
+    to right,
+    rgba(16, 185, 129, 0.1) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(239, 68, 68, 0.1) 100%
+  );
+}
+
 .task-name-container {
   display: flex;
   align-items: center;

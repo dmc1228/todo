@@ -54,6 +54,11 @@ export function TaskItem({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(task.name);
 
+  // Mobile swipe gesture support
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchCurrentX, setTouchCurrentX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -240,15 +245,77 @@ export function TaskItem({
     }
   };
 
+  // Mobile swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    // Don't start swipe on interactive elements
+    if (
+      target.closest("input") ||
+      target.closest("select") ||
+      target.closest("button")
+    ) {
+      return;
+    }
+    setTouchStartX(e.touches[0].clientX);
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === 0) return;
+    setTouchCurrentX(e.touches[0].clientX);
+    const diff = e.touches[0].clientX - touchStartX;
+    if (Math.abs(diff) > 10) {
+      setIsSwiping(true);
+      // Prevent scrolling while swiping
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) {
+      setTouchStartX(0);
+      setTouchCurrentX(0);
+      return;
+    }
+
+    const diff = touchCurrentX - touchStartX;
+    const threshold = 100;
+
+    // Swipe right to complete
+    if (diff > threshold) {
+      handleCheckboxClick({ stopPropagation: () => {} } as React.MouseEvent);
+    }
+    // Swipe left to delete
+    else if (diff < -threshold) {
+      if (window.confirm(`Delete "${task.name}"?`)) {
+        onUpdate(task.id, { archived: true });
+      }
+    }
+
+    setTouchStartX(0);
+    setTouchCurrentX(0);
+    setIsSwiping(false);
+  };
+
   // Check if task is completed (for shopping list strikethrough view)
   const isCompleted = !!task.completed_at;
+
+  // Calculate swipe offset for visual feedback
+  const swipeOffset = isSwiping ? touchCurrentX - touchStartX : 0;
+  const swipeStyle = isSwiping ? {
+    transform: `translateX(${swipeOffset}px)`,
+    transition: 'none',
+  } : {};
 
   return (
     <motion.tr
       ref={setNodeRef}
-      style={style}
-      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isCompleted ? "completed" : ""} ${isDragging ? "dragging" : ""}`}
+      style={{ ...style, ...swipeStyle }}
+      className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isCompleted ? "completed" : ""} ${isDragging ? "dragging" : ""} ${isShoppingView ? "shopping-view" : ""} ${isSwiping ? "swiping" : ""}`}
       onClick={(e) => onSelect(e)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       initial={{ opacity: 0 }}
       animate={{
         opacity: isCompleting ? 0 : 1,
