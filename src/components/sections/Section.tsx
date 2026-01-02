@@ -278,14 +278,6 @@ export function Section({
               </td>
             </tr>
 
-            {tasks.length === 0 && (
-              <tr className="empty-section-row">
-                <td colSpan={8} className="empty-section-cell">
-                  No tasks yet
-                </td>
-              </tr>
-            )}
-
             <SortableContext
               items={taskIds}
               strategy={verticalListSortingStrategy}
