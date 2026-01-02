@@ -1,28 +1,35 @@
 import { useState, useEffect, useRef, KeyboardEvent } from "react";
-import { Task } from "../../types";
-import "./SmartShoppingInput.css";
+import { Search } from "lucide-react";
+import { Task, Section } from "../../types";
+import "./GlobalShoppingSearch.css";
 
-interface SmartShoppingInputProps {
-  sectionId: string;
-  allTasks: Task[]; // All tasks including completed/archived
+interface GlobalShoppingSearchProps {
+  allTasks: Task[];
+  sections: Section[];
   onAddTask: (sectionId: string, rawInput: string) => Promise<Task | null>;
   onUnarchiveTask: (taskId: string) => void;
   disabled?: boolean;
 }
 
-export function SmartShoppingInput({
-  sectionId,
+export function GlobalShoppingSearch({
   allTasks,
+  sections,
   onAddTask,
   onUnarchiveTask,
   disabled,
-}: SmartShoppingInputProps) {
+}: GlobalShoppingSearchProps) {
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<Task[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get section name for a task
+  const getSectionName = (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    return section?.name || "Unknown";
+  };
 
   // Filter tasks across ALL shopping sections by search input
   useEffect(() => {
@@ -82,7 +89,7 @@ export function SmartShoppingInput({
         return;
       }
 
-      // If exact match exists but is archived, unarchive it
+      // If exact match exists but is completed, unarchive it
       if (exactMatch && exactMatch.completed_at) {
         onUnarchiveTask(exactMatch.id);
         setInputValue("");
@@ -90,19 +97,25 @@ export function SmartShoppingInput({
         return;
       }
 
-      // If exact match exists and is active, just clear input (it's already on the list)
+      // If exact match exists and is active, just clear input
       if (activeMatch) {
         setInputValue("");
         setShowDropdown(false);
-        // Maybe flash the existing item to show it's already there?
         return;
       }
 
-      // Otherwise, add new task
+      // Otherwise, add new task to "To Sort" section or first section
       if (inputValue.trim()) {
-        onAddTask(sectionId, inputValue.trim());
-        setInputValue("");
-        setShowDropdown(false);
+        const toSortSection = sections.find(
+          (s) => s.name.toLowerCase() === "to sort"
+        );
+        const targetSection = toSortSection || sections[0];
+
+        if (targetSection) {
+          onAddTask(targetSection.id, inputValue.trim());
+          setInputValue("");
+          setShowDropdown(false);
+        }
       }
     } else if (e.key === "Escape") {
       setInputValue("");
@@ -121,7 +134,7 @@ export function SmartShoppingInput({
 
   const handleSelectTask = (task: Task) => {
     if (task.completed_at) {
-      // Unarchive the task
+      // Unarchive the task in its original section
       onUnarchiveTask(task.id);
     }
     // If task is already active, do nothing (it's already on the list)
@@ -140,41 +153,52 @@ export function SmartShoppingInput({
   };
 
   return (
-    <div className={`smart-shopping-input-container ${showDropdown && searchResults.length > 0 ? "has-results" : ""}`}>
-      <input
-        ref={inputRef}
-        type="text"
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        onFocus={() => {
-          if (inputValue.trim() && searchResults.length > 0) {
-            setShowDropdown(true);
-          }
-        }}
-        placeholder="Add item or search existing..."
-        disabled={disabled}
-        className="smart-shopping-input"
-      />
+    <div className={`global-shopping-search-container ${showDropdown && searchResults.length > 0 ? "has-results" : ""}`}>
+      <div className="global-shopping-search-wrapper">
+        <Search size={20} className="global-search-icon" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          onFocus={() => {
+            if (inputValue.trim() && searchResults.length > 0) {
+              setShowDropdown(true);
+            }
+          }}
+          placeholder="Search shopping list or add new item..."
+          disabled={disabled}
+          className="global-shopping-search-input"
+        />
+      </div>
 
       {showDropdown && searchResults.length > 0 && (
-        <div ref={dropdownRef} className="smart-shopping-dropdown">
-          {searchResults.map((task, index) => (
+        <div ref={dropdownRef} className="global-shopping-dropdown">
+          {searchResults.slice(0, 10).map((task, index) => (
             <button
               key={task.id}
-              className={`smart-shopping-result ${selectedIndex === index ? "selected" : ""} ${task.completed_at ? "completed" : "active"}`}
+              className={`global-shopping-result ${selectedIndex === index ? "selected" : ""} ${task.completed_at ? "completed" : "active"}`}
               onClick={() => handleSelectTask(task)}
               onMouseEnter={() => setSelectedIndex(index)}
             >
-              <span className="result-name">{task.name}</span>
+              <div className="result-main">
+                <span className="result-name">{task.name}</span>
+                <span className="result-section">{getSectionName(task.section_id)}</span>
+              </div>
               {task.completed_at ? (
-                <span className="result-status completed">✓ Click to add back</span>
+                <span className="result-status completed">Click to add back</span>
               ) : (
-                <span className="result-status active">Already on list</span>
+                <span className="result-status active">On list</span>
               )}
             </button>
           ))}
+          {searchResults.length > 10 && (
+            <div className="more-results">
+              +{searchResults.length - 10} more results
+            </div>
+          )}
         </div>
       )}
     </div>

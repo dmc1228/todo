@@ -15,6 +15,7 @@ interface KeyboardShortcutHandlers {
   onNewTask: () => void;
   onEscape: () => void;
   onOpenDetail: () => void;
+  onAddTaskBelow: () => void;
   onGoToHome: () => void;
   onGoToAllTasks: () => void;
   onGoToDayPlan: () => void;
@@ -107,6 +108,18 @@ export function useKeyboardShortcuts({
 
   useHotkeys(
     "enter",
+    (e) => {
+      if (selectedTaskId && !isInputFocused()) {
+        e.preventDefault();
+        handlers.onAddTaskBelow();
+      }
+    },
+    [selectedTaskId],
+  );
+
+  // Space to open detail panel (moved from Enter)
+  useHotkeys(
+    "space",
     (e) => {
       if (selectedTaskId && !isInputFocused()) {
         e.preventDefault();

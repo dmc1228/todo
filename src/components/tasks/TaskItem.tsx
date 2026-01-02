@@ -22,6 +22,7 @@ interface TaskItemProps {
   onComplete: () => void;
   onUpdate: (id: string, updates: Partial<Task>) => void;
   onOpenSectionMove?: (taskId: string) => void;
+  onAddTaskBelow?: () => void;
   rowNumber: number;
   isShoppingView?: boolean;
   columnWidths?: {
@@ -44,6 +45,7 @@ export function TaskItem({
   onComplete,
   onUpdate,
   onOpenSectionMove,
+  onAddTaskBelow,
   rowNumber,
   isShoppingView = false,
   columnWidths,
@@ -231,6 +233,8 @@ export function TaskItem({
     if (e.key === "Enter") {
       e.preventDefault();
       handleNameSave();
+      // After saving, add a new task below this one
+      onAddTaskBelow?.();
     } else if (e.key === "Escape") {
       e.preventDefault();
       setNameInput(task.name);

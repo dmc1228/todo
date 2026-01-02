@@ -18,6 +18,7 @@ import {
 import { Plus, ArrowUp, ArrowDown, Filter } from "lucide-react";
 import { Section as SectionType, Task, Project } from "../../types";
 import { Section } from "./Section";
+import { GlobalShoppingSearch } from "./GlobalShoppingSearch";
 import { useColumnResize } from "../../hooks/useColumnResize";
 import { EmptyState } from "../common/EmptyState";
 import { parseISO } from "date-fns";
@@ -474,6 +475,16 @@ export function SectionList({
       onDragEnd={handleDragEnd}
     >
       <div className="section-list">
+        {/* Global search for shopping view */}
+        {isShoppingView && allTasks && onUnarchiveTask && (
+          <GlobalShoppingSearch
+            allTasks={allTasks}
+            sections={sections}
+            onAddTask={onAddTask}
+            onUnarchiveTask={onUnarchiveTask}
+          />
+        )}
+
         {/* To Sort section - rendered separately at the top */}
         {toSortSection && (
           <table className="tasks-table to-sort-table">
@@ -587,15 +598,13 @@ export function SectionList({
                         <ArrowDown size={14} />
                       ))}
                   </button>
-                  {!isShoppingView && (
-                    <div
-                      className="column-resize-handle"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleMouseDown("taskName", e.clientX);
-                      }}
-                    />
-                  )}
+                  <div
+                    className="column-resize-handle"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleMouseDown("taskName", e.clientX);
+                    }}
+                  />
                 </div>
               </th>
               <th
@@ -615,15 +624,13 @@ export function SectionList({
                         <ArrowDown size={14} />
                       ))}
                   </button>
-                  {!isShoppingView && (
-                    <div
-                      className="column-resize-handle"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleMouseDown("dueDate", e.clientX);
-                      }}
-                    />
-                  )}
+                  <div
+                    className="column-resize-handle"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleMouseDown("dueDate", e.clientX);
+                    }}
+                  />
                 </div>
               </th>
               {!isShoppingView && (

@@ -293,6 +293,10 @@ export function Section({
                   onComplete={() => onCompleteTask(task.id)}
                   onUpdate={onUpdateTask}
                   onOpenSectionMove={onOpenSectionMove}
+                  onAddTaskBelow={async () => {
+                    // Create a new task below this one
+                    await onAddTask(section.id, "New task");
+                  }}
                   rowNumber={index + 1}
                   isShoppingView={isShoppingSection}
                   columnWidths={columnWidths}

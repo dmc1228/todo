@@ -871,6 +871,22 @@ function AppContent() {
           setDetailPanelTaskId(selectedTaskId);
         }
       },
+      onAddTaskBelow: async () => {
+        if (selectedTaskId) {
+          const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+          if (selectedTask) {
+            // Create a new task in the same section below the selected one
+            const newTask = await createTask("New task", selectedTask.section_id, projects);
+            if (newTask) {
+              // Move it to the position right after the selected task
+              const newPosition = selectedTask.position + 1;
+              await moveTaskToSection(newTask.id, selectedTask.section_id, newPosition);
+              // Select the new task
+              setSelectedTaskId(newTask.id);
+            }
+          }
+        }
+      },
       onGoToHome: () => {
         handleViewChange("home");
       },
