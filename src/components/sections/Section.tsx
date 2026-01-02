@@ -302,6 +302,7 @@ export function Section({
                   onUpdate={onUpdateTask}
                   onOpenSectionMove={onOpenSectionMove}
                   rowNumber={index + 1}
+                  isShoppingView={isShoppingSection}
                   columnWidths={columnWidths}
                 />
               ))}

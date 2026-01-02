@@ -175,6 +175,9 @@ export function SectionList({
 
   const sectionIds = sections.map((s) => s.id);
 
+  // Check if we're in shopping view (all sections have shopping context)
+  const isShoppingView = sections.length > 0 && sections.every((s) => (s as any).context === "shopping");
+
   // Separate "To Sort" section from other sections
   const toSortSection = sections.find(
     (s) => s.name.toLowerCase() === "to sort",
@@ -576,7 +579,7 @@ export function SectionList({
                     className="col-header-button"
                     onClick={() => handleHeaderClick("name")}
                   >
-                    <span>Task</span>
+                    <span>{isShoppingView ? "Item" : "Task"}</span>
                     {sortColumn === "name" &&
                       (sortDirection === "asc" ? (
                         <ArrowUp size={14} />
@@ -584,13 +587,15 @@ export function SectionList({
                         <ArrowDown size={14} />
                       ))}
                   </button>
-                  <div
-                    className="column-resize-handle"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleMouseDown("taskName", e.clientX);
-                    }}
-                  />
+                  {!isShoppingView && (
+                    <div
+                      className="column-resize-handle"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleMouseDown("taskName", e.clientX);
+                      }}
+                    />
+                  )}
                 </div>
               </th>
               <th
@@ -610,15 +615,19 @@ export function SectionList({
                         <ArrowDown size={14} />
                       ))}
                   </button>
-                  <div
-                    className="column-resize-handle"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleMouseDown("dueDate", e.clientX);
-                    }}
-                  />
+                  {!isShoppingView && (
+                    <div
+                      className="column-resize-handle"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleMouseDown("dueDate", e.clientX);
+                      }}
+                    />
+                  )}
                 </div>
               </th>
+              {!isShoppingView && (
+                <>
               <th
                 className="col-priority"
                 style={{ width: `${columnWidths.priority}%` }}
@@ -895,6 +904,8 @@ export function SectionList({
                   />
                 </div>
               </th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>

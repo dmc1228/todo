@@ -23,6 +23,7 @@ interface TaskItemProps {
   onUpdate: (id: string, updates: Partial<Task>) => void;
   onOpenSectionMove?: (taskId: string) => void;
   rowNumber: number;
+  isShoppingView?: boolean;
   columnWidths?: {
     taskName: number;
     dueDate: number;
@@ -44,6 +45,7 @@ export function TaskItem({
   onUpdate,
   onOpenSectionMove,
   rowNumber,
+  isShoppingView = false,
   columnWidths,
 }: TaskItemProps) {
   const [isCompleting, setIsCompleting] = useState(false);
@@ -356,84 +358,86 @@ export function TaskItem({
         </div>
       </td>
 
-      <td
-        className="task-cell-priority"
-        style={
-          columnWidths ? { width: `${columnWidths.priority}%` } : undefined
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        <select
-          value={task.importance ?? ""}
-          onChange={handlePriorityChange}
-          className={`inline-select priority-select priority-${task.importance ?? "blank"}`}
-        >
-          <option value=""></option>
-          <option value="normal">Low</option>
-          <option value="important">Medium</option>
-          <option value="very_important">High</option>
-        </select>
-      </td>
+      {!isShoppingView && (
+        <>
+          <td
+            className="task-cell-priority"
+            style={
+              columnWidths ? { width: `${columnWidths.priority}%` } : undefined
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={task.importance ?? ""}
+              onChange={handlePriorityChange}
+              className={`inline-select priority-select priority-${task.importance ?? "blank"}`}
+            >
+              <option value=""></option>
+              <option value="normal">Low</option>
+              <option value="important">Medium</option>
+              <option value="very_important">High</option>
+            </select>
+          </td>
 
-      <td
-        className="task-cell-project"
-        style={
-          columnWidths ? { width: `${columnWidths.projects}%` } : undefined
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        <select
-          value={task.project_id || ""}
-          onChange={handleProjectChange}
-          className="inline-select project-select"
-        >
-          <option value="">No Project</option>
-          {projects.map((proj) => (
-            <option key={proj.id} value={proj.id}>
-              {proj.name}
-            </option>
-          ))}
-        </select>
-      </td>
+          <td
+            className="task-cell-project"
+            style={
+              columnWidths ? { width: `${columnWidths.projects}%` } : undefined
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={task.project_id || ""}
+              onChange={handleProjectChange}
+              className="inline-select project-select"
+            >
+              <option value="">No Project</option>
+              {projects.map((proj) => (
+                <option key={proj.id} value={proj.id}>
+                  {proj.name}
+                </option>
+              ))}
+            </select>
+          </td>
 
-      <td
-        className="task-cell-urgent"
-        style={columnWidths ? { width: `${columnWidths.urgent}%` } : undefined}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <select
-          value={task.urgent === null ? "" : task.urgent.toString()}
-          onChange={handleUrgentChange}
-          className={`inline-select urgent-select urgent-${task.urgent === null ? "blank" : task.urgent}`}
-        >
-          <option value=""></option>
-          <option value="false">No</option>
-          <option value="true">Yes</option>
-        </select>
-      </td>
+          <td
+            className="task-cell-urgent"
+            style={columnWidths ? { width: `${columnWidths.urgent}%` } : undefined}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={task.urgent === null ? "" : task.urgent.toString()}
+              onChange={handleUrgentChange}
+              className={`inline-select urgent-select urgent-${task.urgent === null ? "blank" : task.urgent}`}
+            >
+              <option value=""></option>
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </td>
 
-      <td
-        className="task-cell-length"
-        style={columnWidths ? { width: `${columnWidths.length}%` } : undefined}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <select
-          value={task.length ?? ""}
-          onChange={handleLengthChange}
-          className={`inline-select length-select length-${task.length ?? "blank"}`}
-        >
-          <option value=""></option>
-          <option value="short">Short</option>
-          <option value="medium">Medium</option>
-          <option value="long">Long</option>
-        </select>
-      </td>
+          <td
+            className="task-cell-length"
+            style={columnWidths ? { width: `${columnWidths.length}%` } : undefined}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={task.length ?? ""}
+              onChange={handleLengthChange}
+              className={`inline-select length-select length-${task.length ?? "blank"}`}
+            >
+              <option value=""></option>
+              <option value="short">Short</option>
+              <option value="medium">Medium</option>
+              <option value="long">Long</option>
+            </select>
+          </td>
 
-      <td
-        className="task-cell-tags"
-        style={columnWidths ? { width: `${columnWidths.tags}%` } : undefined}
-        onClick={handleTagsClick}
-      >
+          <td
+            className="task-cell-tags"
+            style={columnWidths ? { width: `${columnWidths.tags}%` } : undefined}
+            onClick={handleTagsClick}
+          >
         <div className="tags-container">
           {task.tags &&
             task.tags.length > 0 &&
@@ -470,6 +474,8 @@ export function TaskItem({
           )}
         </div>
       </td>
+        </>
+      )}
     </motion.tr>
   );
 }
