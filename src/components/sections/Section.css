@@ -22,6 +22,15 @@
   flex: 1;
 }
 
+/* Shopping sections: align left */
+.shopping-view .section-header-content {
+  padding-left: 16px;
+}
+
+.section-add-task-row.shopping-view .section-add-task-cell {
+  padding-left: 16px;
+}
+
 .collapse-toggle {
   background: none;
   border: none;

@@ -197,7 +197,7 @@ export function Section({
     <Fragment>
       <tr
         ref={setNodeRef}
-        className="section-header-row"
+        className={`section-header-row ${isShoppingSection ? "shopping-view" : ""}`}
         onClick={handleHeaderClick}
       >
         <td colSpan={8} className="section-cell-header">
@@ -252,7 +252,7 @@ export function Section({
         {!isCollapsed && (
           <Fragment>
             {/* Add task input - right under section header */}
-            <tr className="section-add-task-row">
+            <tr className={`section-add-task-row ${isShoppingSection ? "shopping-view" : ""}`}>
               <td colSpan={8} className="section-add-task-cell">
                 {isShoppingSection && allTasks && onUnarchiveTask ? (
                   <SmartShoppingInput

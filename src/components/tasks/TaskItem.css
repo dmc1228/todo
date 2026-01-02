@@ -52,13 +52,18 @@
   min-width: 300px;
 }
 
-/* Shopping view: make item column take more space */
+/* Shopping view: make item column take more space and align left */
 .task-row.shopping-view .task-cell-name {
   width: 70%;
+  padding-left: 16px;
 }
 
 .task-row.shopping-view .task-cell-due-date {
   width: 30%;
+}
+
+.task-row.shopping-view .task-cell-number {
+  padding-left: 16px;
 }
 
 /* Swipe gesture feedback */

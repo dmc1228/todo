@@ -76,6 +76,15 @@
   background-color: inherit;
 }
 
+/* Shopping view: align headers left */
+.tasks-table.shopping-view .table-header-row th {
+  padding-left: 16px;
+}
+
+.tasks-table.shopping-view .col-number {
+  padding-left: 16px;
+}
+
 .col-header-content {
   display: flex;
   align-items: center;

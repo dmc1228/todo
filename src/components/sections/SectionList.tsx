@@ -566,7 +566,7 @@ export function SectionList({
         )}
 
         {/* Main task list */}
-        <table className="tasks-table">
+        <table className={`tasks-table ${isShoppingView ? "shopping-view" : ""}`}>
           <thead>
             <tr className="table-header-row">
               <th className="col-number">#</th>
