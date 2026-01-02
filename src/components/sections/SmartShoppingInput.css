@@ -5,19 +5,39 @@
 
 .smart-shopping-input {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--background-primary);
-  color: var(--text-primary);
-  font-size: 14px;
+  padding: 10px 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 500;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .smart-shopping-input:focus {
   outline: none;
-  border-color: var(--accent-color);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.smart-shopping-input-container.has-results .smart-shopping-input {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  .smart-shopping-input {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+
+  .smart-shopping-input:focus {
+    border-color: #6366f1;
+  }
 }
 
 .smart-shopping-input:disabled {
@@ -32,10 +52,10 @@
   right: 0;
   max-height: 300px;
   overflow-y: auto;
-  background: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border: 2px solid #6366f1;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   z-index: 1000;
 }
 
@@ -44,13 +64,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: none;
-  background: none;
+  background: #ffffff;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s;
-  border-bottom: 1px solid var(--border-color);
+  transition: all 0.15s;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .smart-shopping-result:last-child {
@@ -59,36 +79,81 @@
 
 .smart-shopping-result:hover,
 .smart-shopping-result.selected {
-  background: var(--hover-color);
+  background: #f0f9ff;
+  border-left: 3px solid #6366f1;
+  padding-left: 13px;
 }
 
 .smart-shopping-result.completed {
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .result-name {
   flex: 1;
-  font-size: 14px;
-  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .smart-shopping-result.completed .result-name {
   text-decoration: line-through;
+  color: #6b7280;
 }
 
 .result-status {
   font-size: 12px;
-  padding: 2px 8px;
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 12px;
   white-space: nowrap;
 }
 
 .result-status.active {
-  background: var(--success-bg);
-  color: var(--success-color);
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
 }
 
 .result-status.completed {
-  background: var(--info-bg);
-  color: var(--info-color);
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .smart-shopping-dropdown {
+    background: #1f2937;
+    border-color: #6366f1;
+  }
+
+  .smart-shopping-result {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+
+  .smart-shopping-result:hover,
+  .smart-shopping-result.selected {
+    background: #374151;
+  }
+
+  .result-name {
+    color: #f9fafb;
+  }
+
+  .smart-shopping-result.completed .result-name {
+    color: #9ca3af;
+  }
+
+  .result-status.active {
+    background: #064e3b;
+    color: #86efac;
+    border-color: #166534;
+  }
+
+  .result-status.completed {
+    background: #1e3a8a;
+    color: #93c5fd;
+    border-color: #1e40af;
+  }
 }

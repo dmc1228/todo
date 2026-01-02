@@ -145,7 +145,7 @@ export function SmartShoppingInput({
   };
 
   return (
-    <div className="smart-shopping-input-container">
+    <div className={`smart-shopping-input-container ${showDropdown && searchResults.length > 0 ? "has-results" : ""}`}>
       <input
         ref={inputRef}
         type="text"
