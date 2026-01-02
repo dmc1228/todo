@@ -1,0 +1,227 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.share-modal {
+  background: var(--background-primary);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.share-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.share-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.share-modal-title h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.share-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.share-modal-close:hover {
+  background: var(--hover-color);
+}
+
+.share-modal-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.share-add-form {
+  margin-bottom: 24px;
+}
+
+.share-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-secondary);
+  transition: border-color 0.2s;
+}
+
+.share-input-group:focus-within {
+  border-color: var(--accent-color);
+}
+
+.share-input-icon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.share-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.share-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.share-add-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.share-add-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.share-add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.share-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--error-bg);
+  color: var(--error-color);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.share-collaborators-section {
+  margin-top: 24px;
+}
+
+.share-section-title {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.share-collaborators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-collaborator-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.share-collaborator-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.share-collaborator-email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.share-you-badge {
+  background: var(--accent-bg);
+  color: var(--accent-color);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.share-collaborator-role {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.share-remove-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.share-remove-button:hover {
+  background: var(--error-bg);
+  color: var(--error-color);
+}
+
+.share-empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+.share-info {
+  margin-top: 24px;
+  padding: 12px;
+  background: var(--info-bg);
+  border-radius: 8px;
+}
+
+.share-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

@@ -11,6 +11,7 @@ import { Reminders } from "./components/reminders/Reminders";
 import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
 import { Home } from "./components/home/Home";
+import { ShareModal } from "./components/common/ShareModal";
 
 // Lazy load modals that are not immediately needed
 const ImportModal = lazy(() =>
@@ -31,6 +32,7 @@ import { useReminders } from "./hooks/useReminders";
 import { useTaskFilter, ViewType } from "./hooks/useTaskFilter";
 import { useToast } from "./hooks/useToast";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useCollaborators } from "./hooks/useCollaborators";
 import { Task } from "./types";
 
 function AppContent() {
@@ -56,6 +58,7 @@ function AppContent() {
   const [sectionSelectorOpen, setSectionSelectorOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [shoppingViewMode, setShoppingViewMode] = useState<"incomplete-only" | "show-all-strikethrough">("incomplete-only");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const { toasts, removeToast, addToast, success, error} = useToast();
 
   // Data hooks
@@ -64,6 +67,7 @@ function AppContent() {
     loading: sectionsLoading,
     createSection,
     updateSection,
+    deleteSection,
     reorderSections,
   } = useSections();
   const {
@@ -89,6 +93,20 @@ function AppContent() {
     deleteReminder,
     completeReminder,
   } = useReminders();
+
+  // Collaborators hook - determine which resource to share
+  const getShareResource = () => {
+    if (currentView === "shopping") return { viewContext: "shopping" as const };
+    if (currentView === "agenda") return { viewContext: "agenda" as const };
+    if (currentView === "project" && currentProjectId) return { projectId: currentProjectId };
+    return {};
+  };
+
+  const {
+    collaborators,
+    addCollaborator,
+    removeCollaborator,
+  } = useCollaborators(getShareResource());
 
   const isLoading = sectionsLoading || tasksLoading || projectsLoading || remindersLoading;
 
@@ -253,6 +271,11 @@ function AppContent() {
       return sections.filter((s) => (s as any).context === "shopping");
     }
 
+    // Agenda view uses agenda context sections
+    if (currentView === "agenda") {
+      return sections.filter((s) => (s as any).context === "agenda");
+    }
+
     // Project view with custom sections uses project-specific context
     if (currentView === "project" && currentProjectId) {
       const project = projects.find((p) => p.id === currentProjectId);
@@ -299,6 +322,8 @@ function AppContent() {
       let context = "main";
       if (currentView === "shopping") {
         context = "shopping";
+      } else if (currentView === "agenda") {
+        context = "agenda";
       } else if (currentView === "project" && currentProjectId) {
         const project = projects.find((p) => p.id === currentProjectId);
         if ((project as any)?.view_mode === "custom") {
@@ -314,6 +339,32 @@ function AppContent() {
       }
     }
   }, [createSection, success, error, currentView, currentProjectId, projects]);
+
+  const handleDeleteSection = useCallback(async (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section) return;
+
+    const sectionTasks = tasks.filter((t) => t.section_id === sectionId);
+
+    if (sectionTasks.length > 0) {
+      const confirmed = window.confirm(
+        `"${section.name}" contains ${sectionTasks.length} task${sectionTasks.length === 1 ? '' : 's'}. ` +
+        `Deleting this section will also delete all tasks in it. Continue?`
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = window.confirm(`Delete section "${section.name}"?`);
+      if (!confirmed) return;
+    }
+
+    try {
+      await deleteSection(sectionId);
+      success("Section deleted");
+    } catch (err) {
+      error("Failed to delete section");
+      console.error("Delete section error:", err);
+    }
+  }, [sections, tasks, deleteSection, success, error]);
 
   const handleCreateProject = useCallback(async () => {
     const name = prompt("Project name:");
@@ -338,12 +389,12 @@ function AppContent() {
     async (sectionId: string, rawInput: string) => {
       if (!rawInput.trim()) {
         error("Task name cannot be empty");
-        return;
+        return null;
       }
       const result = await createTask(rawInput, sectionId, projects);
       if (!result) {
         error("Failed to create task");
-        return;
+        return null;
       }
 
       // Set importance based on priority section name
@@ -364,6 +415,8 @@ function AppContent() {
           await updateTask(result.id, { importance });
         }
       }
+
+      return result;
     },
     [createTask, updateTask, sections, projects, error],
   );
@@ -416,6 +469,47 @@ function AppContent() {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleOpenShare = useCallback(() => {
+    setShareModalOpen(true);
+  }, []);
+
+  const handleAddCollaborator = useCallback(
+    async (email: string) => {
+      const result = await addCollaborator(email);
+      if (result) {
+        success("Collaborator added successfully");
+      } else {
+        error("Failed to add collaborator");
+      }
+      return result;
+    },
+    [addCollaborator, success, error]
+  );
+
+  const handleRemoveCollaborator = useCallback(
+    async (collaboratorId: string) => {
+      await removeCollaborator(collaboratorId);
+      success("Collaborator removed");
+    },
+    [removeCollaborator, success]
+  );
+
+  // Get the share title based on current view
+  const getShareTitle = () => {
+    switch (currentView) {
+      case "shopping":
+        return "Shopping List";
+      case "agenda":
+        return "Agenda";
+      case "project": {
+        const project = projects.find((p) => p.id === currentProjectId);
+        return project ? project.name : "Project";
+      }
+      default:
+        return "";
+    }
   };
 
   const handleSelectTask = useCallback(
@@ -538,22 +632,41 @@ function AppContent() {
 
   const handleMoveSelectedTaskToSection = useCallback(
     async (sectionId: string) => {
-      if (!selectedTaskId) return;
+      // Check if we're doing a batch move
+      const tasksToMove = selectedTaskIds.size > 0
+        ? Array.from(selectedTaskIds)
+        : (selectedTaskId ? [selectedTaskId] : []);
 
-      const task = tasks.find((t) => t.id === selectedTaskId);
-      if (!task || task.section_id === sectionId) return;
+      if (tasksToMove.length === 0) return;
 
       // Get the position at the end of the target section
       const sectionTasks = tasks.filter((t) => t.section_id === sectionId);
-      const newPosition =
+      let newPosition =
         sectionTasks.length > 0
           ? Math.max(...sectionTasks.map((t) => t.position)) + 1
           : 0;
 
-      await moveTaskToSection(selectedTaskId, sectionId, newPosition);
-      success("Task moved");
+      // Move all selected tasks
+      for (const taskId of tasksToMove) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (!task || task.section_id === sectionId) continue;
+
+        await moveTaskToSection(taskId, sectionId, newPosition);
+        newPosition++; // Increment position for next task
+      }
+
+      // Clear selection after batch move
+      if (selectedTaskIds.size > 0) {
+        setSelectedTaskIds(new Set());
+      }
+
+      success(
+        tasksToMove.length > 1
+          ? `Moved ${tasksToMove.length} tasks`
+          : "Task moved"
+      );
     },
-    [selectedTaskId, tasks, moveTaskToSection, success],
+    [selectedTaskId, selectedTaskIds, tasks, moveTaskToSection, success],
   );
 
   const handleQuickAddTask = useCallback(
@@ -803,6 +916,8 @@ function AppContent() {
         return "Reminders";
       case "shopping":
         return "Shopping List";
+      case "agenda":
+        return "Agenda";
       case "project": {
         const project = projects.find((p) => p.id === currentProjectId);
         return project ? project.name : "Project";
@@ -833,6 +948,7 @@ function AppContent() {
         onOpenShortcuts={() => setShowShortcutsHelp(true)}
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
+        onShare={handleOpenShare}
         onToggleProjectViewMode={handleToggleProjectViewMode}
         shoppingViewMode={shoppingViewMode}
         onToggleShoppingViewMode={setShoppingViewMode}
@@ -868,12 +984,15 @@ function AppContent() {
             onCompleteTask={handleCompleteTask}
             onUpdateTask={handleUpdateTask}
             onUpdateSection={updateSection}
+            onDeleteSection={handleDeleteSection}
             onReorderSections={reorderSections}
             onReorderTasks={reorderTasks}
             onMoveTaskToSection={moveTaskToSection}
             onAddSection={handleCreateSection}
             onAddTask={handleAddTask}
             onOpenSectionMove={handleOpenSectionMove}
+            allTasks={tasks}
+            onUnarchiveTask={undoCompleteTask}
           />
         )}
       </AppLayout>
@@ -916,12 +1035,13 @@ function AppContent() {
 
       <SectionMoveDropdown
         isOpen={sectionSelectorOpen}
-        sections={sections}
+        sections={filteredSections}
         currentSectionId={
           selectedTaskId
             ? tasks.find((t) => t.id === selectedTaskId)?.section_id || null
             : null
         }
+        selectedCount={selectedTaskIds.size > 0 ? selectedTaskIds.size : 1}
         onSelectSection={handleMoveSelectedTaskToSection}
         onClose={() => setSectionSelectorOpen(false)}
       />
@@ -932,6 +1052,16 @@ function AppContent() {
         projects={projects}
         onClose={() => setQuickAddOpen(false)}
         onSubmit={handleQuickAddTask}
+      />
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        title={getShareTitle()}
+        collaborators={collaborators}
+        onAddCollaborator={handleAddCollaborator}
+        onRemoveCollaborator={handleRemoveCollaborator}
+        currentUserEmail={user?.email || ""}
       />
 
       <ToastContainer toasts={toasts} onClose={removeToast} />

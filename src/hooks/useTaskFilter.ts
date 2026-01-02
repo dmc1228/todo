@@ -12,6 +12,7 @@ export type ViewType =
   | "journal"
   | "reminders"
   | "shopping"
+  | "agenda"
   | "project";
 
 export interface FilterCriteria {
@@ -133,6 +134,11 @@ export function useTaskFilter(
 
       case "shopping":
         // Shopping list tasks are filtered by section context in the component
+        // This filter is a no-op since tasks are already filtered by section
+        break;
+
+      case "agenda":
+        // Agenda tasks are filtered by section context in the component
         // This filter is a no-op since tasks are already filtered by section
         break;
 

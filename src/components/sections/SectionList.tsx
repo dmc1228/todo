@@ -33,6 +33,7 @@ interface SectionListProps {
   onCompleteTask: (taskId: string) => void;
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onUpdateSection: (id: string, updates: Partial<SectionType>) => void;
+  onDeleteSection: (id: string) => void;
   onReorderSections: (orderedIds: string[]) => void;
   onReorderTasks: (sectionId: string, orderedIds: string[]) => void;
   onMoveTaskToSection: (
@@ -41,8 +42,10 @@ interface SectionListProps {
     newPosition: number,
   ) => void;
   onAddSection: () => void;
-  onAddTask: (sectionId: string, rawInput: string) => void;
+  onAddTask: (sectionId: string, rawInput: string) => Promise<Task | null>;
   onOpenSectionMove?: (taskId: string) => void;
+  allTasks?: Task[]; // All tasks including completed for shopping list
+  onUnarchiveTask?: (taskId: string) => void;
 }
 
 interface SortableSectionProps {
@@ -55,7 +58,8 @@ interface SortableSectionProps {
   onCompleteTask: (taskId: string) => void;
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onUpdateSection: (id: string, updates: Partial<SectionType>) => void;
-  onAddTask: (sectionId: string, rawInput: string) => void;
+  onDeleteSection: (id: string) => void;
+  onAddTask: (sectionId: string, rawInput: string) => Promise<Task | null>;
   onOpenSectionMove?: (taskId: string) => void;
   columnWidths: {
     taskName: number;
@@ -66,6 +70,8 @@ interface SortableSectionProps {
     tags: number;
     projects: number;
   };
+  allTasks?: Task[];
+  onUnarchiveTask?: (taskId: string) => void;
 }
 
 function SortableSection({
@@ -78,9 +84,12 @@ function SortableSection({
   onCompleteTask,
   onUpdateTask,
   onUpdateSection,
+  onDeleteSection,
   onAddTask,
   onOpenSectionMove,
   columnWidths,
+  allTasks,
+  onUnarchiveTask,
 }: SortableSectionProps) {
   const { attributes, listeners } = useSortable({ id: section.id });
 
@@ -95,10 +104,13 @@ function SortableSection({
       onCompleteTask={onCompleteTask}
       onUpdateTask={onUpdateTask}
       onUpdateSection={onUpdateSection}
+      onDeleteSection={onDeleteSection}
       onAddTask={onAddTask}
       onOpenSectionMove={onOpenSectionMove}
       dragHandleProps={{ ...attributes, ...listeners }}
       columnWidths={columnWidths}
+      allTasks={allTasks}
+      onUnarchiveTask={onUnarchiveTask}
     />
   );
 }
@@ -131,12 +143,15 @@ export function SectionList({
   onCompleteTask,
   onUpdateTask,
   onUpdateSection,
+  onDeleteSection,
   onReorderSections,
   onReorderTasks,
   onMoveTaskToSection,
   onAddSection,
   onAddTask,
   onOpenSectionMove,
+  allTasks,
+  onUnarchiveTask,
 }: SectionListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"task" | "section" | null>(null);
@@ -535,9 +550,12 @@ export function SectionList({
                   onCompleteTask={onCompleteTask}
                   onUpdateTask={onUpdateTask}
                   onUpdateSection={onUpdateSection}
+                  onDeleteSection={onDeleteSection}
                   onAddTask={onAddTask}
                   onOpenSectionMove={onOpenSectionMove}
                   columnWidths={columnWidths}
+                  allTasks={allTasks}
+                  onUnarchiveTask={onUnarchiveTask}
                 />
               </SortableContext>
             </tbody>
@@ -896,9 +914,12 @@ export function SectionList({
                   onCompleteTask={onCompleteTask}
                   onUpdateTask={onUpdateTask}
                   onUpdateSection={onUpdateSection}
+                  onDeleteSection={onDeleteSection}
                   onAddTask={onAddTask}
                   onOpenSectionMove={onOpenSectionMove}
                   columnWidths={columnWidths}
+                  allTasks={allTasks}
+                  onUnarchiveTask={onUnarchiveTask}
                 />
               ))}
             </SortableContext>

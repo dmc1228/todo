@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Menu, Upload, ChevronRight, LayoutList, FolderKanban, Eye, EyeOff } from "lucide-react";
+import { Menu, Upload, ChevronRight, LayoutList, FolderKanban, Eye, EyeOff, Share2 } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Project, Task, Section, ProjectViewMode, ShoppingViewMode } from "../../types";
 import { ViewType } from "../../hooks/useTaskFilter";
@@ -25,6 +25,7 @@ interface AppLayoutProps {
   onOpenShortcuts: () => void;
   onOpenJournal: () => void;
   onImport: () => void;
+  onShare?: () => void; // Share button for shopping, agenda, and projects
 
   // Project view mode
   onToggleProjectViewMode?: (projectId: string, newMode: ProjectViewMode) => void;
@@ -63,6 +64,7 @@ export function AppLayout({
   onToggleProjectViewMode,
   shoppingViewMode,
   onToggleShoppingViewMode,
+  onShare,
   viewName,
   children,
   detailPanel,
@@ -119,6 +121,17 @@ export function AppLayout({
             <h1 className="view-title">{viewName}</h1>
           </div>
           <div className="header-right">
+            {(currentView === "shopping" || currentView === "agenda" || currentView === "project") && onShare && (
+              <button
+                className="share-button"
+                onClick={onShare}
+                title="Share this view"
+                aria-label="Share"
+              >
+                <Share2 size={16} />
+                <span>Share</span>
+              </button>
+            )}
             {currentView === "shopping" && onToggleShoppingViewMode && (
               <div className="view-mode-toggle">
                 <button

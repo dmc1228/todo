@@ -19,6 +19,7 @@
   align-items: center;
   gap: 10px;
   padding-left: 40px;
+  flex: 1;
 }
 
 .collapse-toggle {
@@ -61,6 +62,27 @@
   padding: 4px 6px;
   outline: none;
   background: white;
+}
+
+.section-delete-button {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  transition: color 0.2s;
+  margin-left: auto;
+  opacity: 0;
+}
+
+.section-header-row:hover .section-delete-button {
+  opacity: 1;
+}
+
+.section-delete-button:hover {
+  color: #ef4444;
 }
 
 .empty-section-row {
@@ -170,6 +192,14 @@
     background: #374151;
     border-color: #6366f1;
     color: #f9fafb;
+  }
+
+  .section-delete-button {
+    color: #6b7280;
+  }
+
+  .section-delete-button:hover {
+    color: #f87171;
   }
 
   .section-add-task-input {

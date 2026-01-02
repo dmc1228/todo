@@ -5,9 +5,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Section as SectionType, Task, Project } from "../../types";
 import { TaskItem } from "../tasks/TaskItem";
+import { SmartShoppingInput } from "./SmartShoppingInput";
 import "./Section.css";
 
 interface SectionProps {
@@ -20,7 +21,8 @@ interface SectionProps {
   onCompleteTask: (taskId: string) => void;
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onUpdateSection: (id: string, updates: Partial<SectionType>) => void;
-  onAddTask: (sectionId: string, rawInput: string) => void;
+  onDeleteSection: (id: string) => void;
+  onAddTask: (sectionId: string, rawInput: string) => Promise<Task | null>;
   onOpenSectionMove?: (taskId: string) => void;
   dragHandleProps?: any;
   columnWidths?: {
@@ -32,6 +34,8 @@ interface SectionProps {
     tags: number;
     projects: number;
   };
+  allTasks?: Task[]; // All tasks including completed for shopping list
+  onUnarchiveTask?: (taskId: string) => void;
 }
 
 export function Section({
@@ -44,16 +48,20 @@ export function Section({
   onCompleteTask,
   onUpdateTask,
   onUpdateSection,
+  onDeleteSection,
   onAddTask,
   onOpenSectionMove,
   dragHandleProps: _dragHandleProps,
   columnWidths,
+  allTasks,
+  onUnarchiveTask,
 }: SectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(section.name);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [newTaskInput, setNewTaskInput] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [autoCreatedTaskId, setAutoCreatedTaskId] = useState<string | null>(null);
   const addTaskInputRef = useRef<HTMLInputElement>(null);
 
   const { setNodeRef } = useDroppable({
@@ -61,6 +69,9 @@ export function Section({
   });
 
   const taskIds = tasks.map((t) => t.id);
+
+  // Check if this is a shopping section
+  const isShoppingSection = (section as any).context === "shopping";
 
   const handleHeaderClick = () => {
     if (!isEditing) {
@@ -95,10 +106,45 @@ export function Section({
     if (!newTaskInput.trim()) return;
     setIsAddingTask(true);
     try {
-      await onAddTask(section.id, newTaskInput.trim());
-      setNewTaskInput("");
+      // If we have an auto-created task, just clear state (task already exists)
+      if (autoCreatedTaskId) {
+        setAutoCreatedTaskId(null);
+        setNewTaskInput("");
+      } else {
+        // Create new task (mobile or if auto-create didn't happen)
+        await onAddTask(section.id, newTaskInput.trim());
+        setNewTaskInput("");
+      }
     } finally {
       setIsAddingTask(false);
+    }
+  };
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewTaskInput(value);
+
+    // On desktop (not mobile), auto-create task when typing starts
+    const isDesktop = window.innerWidth > 768;
+
+    if (!value.trim() && autoCreatedTaskId) {
+      // User cleared the input - delete the auto-created task
+      // We'll need a delete function, but for now just reset the ID
+      setAutoCreatedTaskId(null);
+    } else if (isDesktop && value.trim() && !autoCreatedTaskId && !isShoppingSection) {
+      setIsAddingTask(true);
+      try {
+        // Create a task and track its ID
+        const newTask = await onAddTask(section.id, value.trim());
+        if (newTask) {
+          setAutoCreatedTaskId(newTask.id);
+        }
+      } finally {
+        setIsAddingTask(false);
+      }
+    } else if (autoCreatedTaskId && value.trim()) {
+      // Update the existing auto-created task as the user types
+      await onUpdateTask(autoCreatedTaskId, { name: value.trim() });
     }
   };
 
@@ -182,9 +228,21 @@ export function Section({
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <h3 className="section-name" onClick={handleNameClick}>
-                {section.name}
-              </h3>
+              <>
+                <h3 className="section-name" onClick={handleNameClick}>
+                  {section.name}
+                </h3>
+                <button
+                  className="section-delete-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteSection(section.id);
+                  }}
+                  title="Delete section"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </>
             )}
           </div>
         </td>
@@ -197,17 +255,27 @@ export function Section({
             <tr className="section-add-task-row">
               <td className="empty-cell"></td>
               <td className="section-add-task-cell">
-                <input
-                  ref={addTaskInputRef}
-                  type="text"
-                  value={newTaskInput}
-                  onChange={(e) => setNewTaskInput(e.target.value)}
-                  onKeyDown={handleAddTaskKeyDown}
-                  onPaste={handleAddTaskPaste}
-                  placeholder="New task"
-                  disabled={isAddingTask}
-                  className="section-add-task-input"
-                />
+                {isShoppingSection && allTasks && onUnarchiveTask ? (
+                  <SmartShoppingInput
+                    sectionId={section.id}
+                    allTasks={allTasks}
+                    onAddTask={onAddTask}
+                    onUnarchiveTask={onUnarchiveTask}
+                    disabled={isAddingTask}
+                  />
+                ) : (
+                  <input
+                    ref={addTaskInputRef}
+                    type="text"
+                    value={newTaskInput}
+                    onChange={handleInputChange}
+                    onKeyDown={handleAddTaskKeyDown}
+                    onPaste={handleAddTaskPaste}
+                    placeholder="New task"
+                    disabled={isAddingTask}
+                    className="section-add-task-input"
+                  />
+                )}
               </td>
               <td colSpan={6}></td>
             </tr>

@@ -6,6 +6,7 @@ interface SectionMoveDropdownProps {
   isOpen: boolean;
   sections: Section[];
   currentSectionId: string | null;
+  selectedCount?: number;
   onSelectSection: (sectionId: string) => void;
   onClose: () => void;
 }
@@ -14,6 +15,7 @@ export function SectionMoveDropdown({
   isOpen,
   sections,
   currentSectionId,
+  selectedCount = 1,
   onSelectSection,
   onClose,
 }: SectionMoveDropdownProps) {
@@ -52,7 +54,9 @@ export function SectionMoveDropdown({
   return (
     <div className="section-move-overlay">
       <div className="section-move-dropdown" ref={dropdownRef}>
-        <div className="section-move-header">Move to Section</div>
+        <div className="section-move-header">
+          {selectedCount > 1 ? `Move ${selectedCount} tasks` : "Move to Section"}
+        </div>
         <div className="section-move-list">
           {sections.map((section) => (
             <button

@@ -1,0 +1,94 @@
+.smart-shopping-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.smart-shopping-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.smart-shopping-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.smart-shopping-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.smart-shopping-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.smart-shopping-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.smart-shopping-result:last-child {
+  border-bottom: none;
+}
+
+.smart-shopping-result:hover,
+.smart-shopping-result.selected {
+  background: var(--hover-color);
+}
+
+.smart-shopping-result.completed {
+  opacity: 0.7;
+}
+
+.result-name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.smart-shopping-result.completed .result-name {
+  text-decoration: line-through;
+}
+
+.result-status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.result-status.active {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.result-status.completed {
+  background: var(--info-bg);
+  color: var(--info-color);
+}

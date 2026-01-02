@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Bell,
   ShoppingCart,
+  CalendarDays,
 } from "lucide-react";
 import { Project, Task, Section } from "../../types";
 import { SearchInput } from "../common/SearchInput";
@@ -136,6 +137,14 @@ export function Sidebar({
       sections.filter((s) => (s as any).context === "shopping").map((s) => s.id)
     );
     return tasks.filter((task) => shoppingSectionIds.has(task.section_id)).length;
+  };
+
+  const getAgendaCount = () => {
+    // Count tasks in agenda context sections
+    const agendaSectionIds = new Set(
+      sections.filter((s) => (s as any).context === "agenda").map((s) => s.id)
+    );
+    return tasks.filter((task) => agendaSectionIds.has(task.section_id)).length;
   };
 
   const getProjectTaskCount = (projectId: string) => {
@@ -281,6 +290,16 @@ export function Sidebar({
               <span>Shopping List</span>
               {getShoppingCount() > 0 && (
                 <span className="nav-badge">{getShoppingCount()}</span>
+              )}
+            </button>
+            <button
+              className={`nav-item ${currentView === "agenda" ? "active" : ""}`}
+              onClick={() => handleViewChange("agenda")}
+            >
+              <CalendarDays size={18} />
+              <span>Agenda</span>
+              {getAgendaCount() > 0 && (
+                <span className="nav-badge">{getAgendaCount()}</span>
               )}
             </button>
           </div>
