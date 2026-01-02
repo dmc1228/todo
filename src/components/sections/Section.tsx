@@ -253,8 +253,7 @@ export function Section({
           <Fragment>
             {/* Add task input - right under section header */}
             <tr className="section-add-task-row">
-              <td className="empty-cell"></td>
-              <td className="section-add-task-cell">
+              <td colSpan={8} className="section-add-task-cell">
                 {isShoppingSection && allTasks && onUnarchiveTask ? (
                   <SmartShoppingInput
                     sectionId={section.id}
@@ -277,7 +276,6 @@ export function Section({
                   />
                 )}
               </td>
-              <td colSpan={6}></td>
             </tr>
 
             {tasks.length === 0 && (

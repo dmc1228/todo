@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Menu, Upload, ChevronRight, LayoutList, FolderKanban, Eye, EyeOff, Share2 } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Project, Task, Section, ProjectViewMode, ShoppingViewMode } from "../../types";
@@ -74,6 +74,54 @@ export function AppLayout({
     ? projects.find((p) => p.id === currentProjectId)
     : null;
   const projectViewMode = currentProject?.view_mode || "standard";
+
+  // Mobile swipe gesture support
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const touchEndY = useRef<number>(0);
+
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndX.current = e.touches[0].clientX;
+      touchEndY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = () => {
+      const deltaX = touchEndX.current - touchStartX.current;
+      const deltaY = touchEndY.current - touchStartY.current;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+
+      // Only consider horizontal swipes (more horizontal than vertical)
+      if (absDeltaX > absDeltaY && absDeltaX > 50) {
+        // Swipe from left edge to open sidebar
+        if (!sidebarOpen && touchStartX.current < 30 && deltaX > 0) {
+          onSidebarToggle();
+        }
+        // Swipe left to close sidebar
+        else if (sidebarOpen && deltaX < -50) {
+          onSidebarToggle();
+        }
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [sidebarOpen, onSidebarToggle]);
+
   return (
     <div className="app-layout">
       <Sidebar
