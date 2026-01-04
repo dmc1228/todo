@@ -1,7 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { Section, SectionContext } from "../types";
 import { useAuth } from "./useAuth";
+import {
+  cacheSections,
+  getCachedSections,
+  updateCachedSection,
+  deleteCachedSection,
+  addPendingChange,
+} from "../services/offlineStorage";
 
 interface UseSectionsReturn {
   sections: Section[];
@@ -19,6 +26,74 @@ export function useSections(): UseSectionsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Listen for online/offline changes
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const fetchSections = useCallback(async () => {
+    try {
+      if (!isOnline) {
+        // Load from cache when offline
+        const cachedData = await getCachedSections();
+        const sectionsWithContext = cachedData.map((s) => ({
+          ...s,
+          context: s.context || "main",
+        }));
+        setSections(sectionsWithContext);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error: fetchError } = await supabase
+        .from("sections")
+        .select("*")
+        .order("position", { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      // Ensure all sections have a context (default to 'main' for backwards compatibility)
+      const sectionsWithContext = (data || []).map((s) => ({
+        ...s,
+        context: s.context || "main",
+      }));
+
+      setSections(sectionsWithContext);
+      setError(null);
+
+      // Cache the fetched sections for offline use
+      if (data) {
+        cacheSections(sectionsWithContext).catch(console.error);
+      }
+    } catch (err) {
+      // On network error, try to load from cache
+      console.error("Fetch failed, trying cache:", err);
+      try {
+        const cachedData = await getCachedSections();
+        const sectionsWithContext = cachedData.map((s) => ({
+          ...s,
+          context: s.context || "main",
+        }));
+        setSections(sectionsWithContext);
+      } catch (cacheErr) {
+        setError(err as Error);
+        setSections([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     if (!user) {
@@ -29,7 +104,9 @@ export function useSections(): UseSectionsReturn {
 
     fetchSections();
 
-    // Set up real-time subscription
+    // Set up real-time subscription only when online
+    if (!isOnline) return;
+
     const channel = supabase
       .channel("sections_changes")
       .on(
@@ -49,32 +126,7 @@ export function useSections(): UseSectionsReturn {
     return () => {
       channel.unsubscribe();
     };
-  }, [user]);
-
-  const fetchSections = async () => {
-    try {
-      const { data, error: fetchError } = await supabase
-        .from("sections")
-        .select("*")
-        .order("position", { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      // Ensure all sections have a context (default to 'main' for backwards compatibility)
-      const sectionsWithContext = (data || []).map((s) => ({
-        ...s,
-        context: s.context || "main",
-      }));
-
-      setSections(sectionsWithContext);
-      setError(null);
-    } catch (err) {
-      setError(err as Error);
-      setSections([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, isOnline, fetchSections]);
 
   const createSection = async (
     name: string,
@@ -128,6 +180,28 @@ export function useSections(): UseSectionsReturn {
 
   const updateSection = async (id: string, updates: Partial<Section>) => {
     try {
+      // Optimistically update local state
+      const existingSection = sections.find((s) => s.id === id);
+      if (existingSection) {
+        const updatedSection = { ...existingSection, ...updates };
+        setSections((prev) =>
+          prev.map((s) => (s.id === id ? updatedSection : s))
+        );
+        // Update cache
+        updateCachedSection(updatedSection).catch(console.error);
+      }
+
+      if (!isOnline) {
+        // Queue for later sync
+        await addPendingChange({
+          entity: "section",
+          operation: "update",
+          entityId: id,
+          data: updates,
+        });
+        return;
+      }
+
       const { error: updateError } = await supabase
         .from("sections")
         .update(updates)
@@ -136,11 +210,30 @@ export function useSections(): UseSectionsReturn {
       if (updateError) throw updateError;
     } catch (err) {
       setError(err as Error);
+      if (isOnline) {
+        fetchSections();
+      }
     }
   };
 
   const deleteSection = async (id: string) => {
     try {
+      // Optimistically remove from local state
+      setSections((prev) => prev.filter((s) => s.id !== id));
+      // Remove from cache
+      deleteCachedSection(id).catch(console.error);
+
+      if (!isOnline) {
+        // Queue for later sync
+        await addPendingChange({
+          entity: "section",
+          operation: "delete",
+          entityId: id,
+          data: null,
+        });
+        return;
+      }
+
       const { error: deleteError } = await supabase
         .from("sections")
         .delete()
@@ -149,6 +242,9 @@ export function useSections(): UseSectionsReturn {
       if (deleteError) throw deleteError;
     } catch (err) {
       setError(err as Error);
+      if (isOnline) {
+        fetchSections();
+      }
     }
   };
 

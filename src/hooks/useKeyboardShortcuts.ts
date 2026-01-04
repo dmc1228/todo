@@ -16,6 +16,7 @@ interface KeyboardShortcutHandlers {
   onEscape: () => void;
   onOpenDetail: () => void;
   onAddTaskBelow: () => void;
+  onCreateSection: () => void;
   onGoToHome: () => void;
   onGoToAllTasks: () => void;
   onGoToDayPlan: () => void;
@@ -175,12 +176,17 @@ export function useKeyboardShortcuts({
   useHotkeys(
     "escape",
     (e) => {
+      e.preventDefault();
+      // Close shortcuts help first if it's open
+      if (showShortcutsHelp) {
+        setShowShortcutsHelp(false);
+        return;
+      }
       if (!isInputFocused()) {
-        e.preventDefault();
         handlers.onEscape();
       }
     },
-    [selectedTaskId],
+    [selectedTaskId, showShortcutsHelp],
   );
 
   // Tab sequence shortcuts
@@ -211,6 +217,15 @@ export function useKeyboardShortcuts({
         if (e.key.toLowerCase() === "q") {
           e.preventDefault();
           handlers.onOpenQuickAdd();
+          setTabPressed(false);
+          if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
+          return;
+        }
+
+        // Tab + N: Create new section (works without selection)
+        if (e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          handlers.onCreateSection();
           setTabPressed(false);
           if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
           return;

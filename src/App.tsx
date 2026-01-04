@@ -12,6 +12,7 @@ import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
 import { Home } from "./components/home/Home";
 import { ShareModal } from "./components/common/ShareModal";
+import { OfflineIndicator } from "./components/common/OfflineIndicator";
 
 // Lazy load modals that are not immediately needed
 const ImportModal = lazy(() =>
@@ -887,6 +888,7 @@ function AppContent() {
           }
         }
       },
+      onCreateSection: handleCreateSection,
       onGoToHome: () => {
         handleViewChange("home");
       },
@@ -1081,6 +1083,7 @@ function AppContent() {
       />
 
       <ToastContainer toasts={toasts} onClose={removeToast} />
+      <OfflineIndicator />
     </>
   );
 }

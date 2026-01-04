@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { Task, NewTask, Project } from "../types";
 import { parseQuickAdd, getProjectFromName } from "../lib/taskParser";
 import { calculateNextDueDate } from "../lib/recurrence";
 import { useAuth } from "./useAuth";
+import {
+  cacheTasks,
+  getCachedTasks,
+  updateCachedTask,
+  deleteCachedTask,
+  addPendingChange,
+} from "../services/offlineStorage";
 
 interface UseTasksOptions {
   includeCompleted?: boolean;
@@ -38,6 +45,75 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Listen for online/offline changes
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      if (!isOnline) {
+        // Load from cache when offline
+        const cachedData = await getCachedTasks();
+        let filteredData = cachedData;
+        if (!includeCompleted) {
+          filteredData = cachedData.filter((t) => !t.archived);
+        }
+        setTasks(filteredData);
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
+        .from("tasks")
+        .select("*");
+
+      // Only filter by archived if not including completed tasks
+      if (!includeCompleted) {
+        query = query.eq("archived", false);
+      }
+
+      const { data, error: fetchError } = await query
+        .order("position", { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      setTasks(data || []);
+      setError(null);
+
+      // Cache the fetched tasks for offline use
+      if (data) {
+        cacheTasks(data).catch(console.error);
+      }
+    } catch (err) {
+      // On network error, try to load from cache
+      console.error("Fetch failed, trying cache:", err);
+      try {
+        const cachedData = await getCachedTasks();
+        let filteredData = cachedData;
+        if (!includeCompleted) {
+          filteredData = cachedData.filter((t) => !t.archived);
+        }
+        setTasks(filteredData);
+      } catch (cacheErr) {
+        setError(err as Error);
+        setTasks([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [isOnline, includeCompleted]);
 
   useEffect(() => {
     if (!user) {
@@ -48,7 +124,9 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
 
     fetchTasks();
 
-    // Set up real-time subscription
+    // Set up real-time subscription only when online
+    if (!isOnline) return;
+
     const channel = supabase
       .channel("tasks_changes")
       .on(
@@ -68,33 +146,7 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
     return () => {
       channel.unsubscribe();
     };
-  }, [user, includeCompleted]);
-
-  const fetchTasks = async () => {
-    try {
-      let query = supabase
-        .from("tasks")
-        .select("*");
-
-      // Only filter by archived if not including completed tasks
-      if (!includeCompleted) {
-        query = query.eq("archived", false);
-      }
-
-      const { data, error: fetchError } = await query
-        .order("position", { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      setTasks(data || []);
-      setError(null);
-    } catch (err) {
-      setError(err as Error);
-      setTasks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, includeCompleted, isOnline, fetchTasks]);
 
   const createTask = async (
     rawInput: string,
@@ -199,9 +251,26 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
       // Optimistically update local state
-      setTasks((prev) =>
-        prev.map((task) => (task.id === id ? { ...task, ...updates } : task)),
-      );
+      const updatedTask = tasks.find((t) => t.id === id);
+      if (updatedTask) {
+        const newTask = { ...updatedTask, ...updates };
+        setTasks((prev) =>
+          prev.map((task) => (task.id === id ? newTask : task)),
+        );
+        // Update cache
+        updateCachedTask(newTask).catch(console.error);
+      }
+
+      if (!isOnline) {
+        // Queue for later sync
+        await addPendingChange({
+          entity: "task",
+          operation: "update",
+          entityId: id,
+          data: updates,
+        });
+        return;
+      }
 
       const { error: updateError } = await supabase
         .from("tasks")
@@ -212,7 +281,9 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
     } catch (err) {
       setError(err as Error);
       // Refetch to restore correct state on error
-      fetchTasks();
+      if (isOnline) {
+        fetchTasks();
+      }
     }
   };
 
@@ -224,6 +295,19 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
 
       // Optimistically remove from local state
       setTasks((prev) => prev.filter((task) => task.id !== id));
+      // Remove from cache
+      deleteCachedTask(id).catch(console.error);
+
+      if (!isOnline) {
+        // Queue for later sync
+        await addPendingChange({
+          entity: "task",
+          operation: "delete",
+          entityId: id,
+          data: null,
+        });
+        return task;
+      }
 
       const { error: deleteError } = await supabase
         .from("tasks")
@@ -236,7 +320,9 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
     } catch (err) {
       setError(err as Error);
       // Refetch to restore correct state on error
-      fetchTasks();
+      if (isOnline) {
+        fetchTasks();
+      }
       return null;
     }
   };
@@ -278,16 +364,29 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
       const task = tasks.find((t) => t.id === id);
       if (!task) return;
 
+      const completedAt = new Date().toISOString();
+      const updates = { completed_at: completedAt, archived: true };
+
       // Optimistically remove from UI
       setTasks((prev) => prev.filter((t) => t.id !== id));
+      // Update cache with completed state
+      updateCachedTask({ ...task, ...updates }).catch(console.error);
+
+      if (!isOnline) {
+        // Queue for later sync
+        await addPendingChange({
+          entity: "task",
+          operation: "update",
+          entityId: id,
+          data: updates,
+        });
+        return;
+      }
 
       // Archive the completed task
       const { error: completeError } = await supabase
         .from("tasks")
-        .update({
-          completed_at: new Date().toISOString(),
-          archived: true,
-        })
+        .update(updates)
         .eq("id", id);
 
       if (completeError) throw completeError;
@@ -328,7 +427,9 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
     } catch (err) {
       setError(err as Error);
       // Restore task on error
-      fetchTasks();
+      if (isOnline) {
+        fetchTasks();
+      }
     }
   };
 
