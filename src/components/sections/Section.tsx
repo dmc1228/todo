@@ -61,7 +61,6 @@ export function Section({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [newTaskInput, setNewTaskInput] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
-  const [autoCreatedTaskId, setAutoCreatedTaskId] = useState<string | null>(null);
   const addTaskInputRef = useRef<HTMLInputElement>(null);
 
   const { setNodeRef } = useDroppable({
@@ -106,46 +105,15 @@ export function Section({
     if (!newTaskInput.trim()) return;
     setIsAddingTask(true);
     try {
-      // If we have an auto-created task, just clear state (task already exists)
-      if (autoCreatedTaskId) {
-        setAutoCreatedTaskId(null);
-        setNewTaskInput("");
-      } else {
-        // Create new task (mobile or if auto-create didn't happen)
-        await onAddTask(section.id, newTaskInput.trim());
-        setNewTaskInput("");
-      }
+      await onAddTask(section.id, newTaskInput.trim());
+      setNewTaskInput("");
     } finally {
       setIsAddingTask(false);
     }
   };
 
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewTaskInput(value);
-
-    // On desktop (not mobile), auto-create task when typing starts
-    const isDesktop = window.innerWidth > 768;
-
-    if (!value.trim() && autoCreatedTaskId) {
-      // User cleared the input - delete the auto-created task
-      // We'll need a delete function, but for now just reset the ID
-      setAutoCreatedTaskId(null);
-    } else if (isDesktop && value.trim() && !autoCreatedTaskId && !isShoppingSection) {
-      setIsAddingTask(true);
-      try {
-        // Create a task and track its ID
-        const newTask = await onAddTask(section.id, value.trim());
-        if (newTask) {
-          setAutoCreatedTaskId(newTask.id);
-        }
-      } finally {
-        setIsAddingTask(false);
-      }
-    } else if (autoCreatedTaskId && value.trim()) {
-      // Update the existing auto-created task as the user types
-      await onUpdateTask(autoCreatedTaskId, { name: value.trim() });
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewTaskInput(e.target.value);
   };
 
   const handleAddTaskKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
