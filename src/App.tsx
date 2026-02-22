@@ -6,11 +6,8 @@ import { TaskDetailPanel } from "./components/tasks/TaskDetailPanel";
 import { BatchEditToolbar } from "./components/tasks/BatchEditToolbar";
 import { SectionMoveDropdown } from "./components/tasks/SectionMoveDropdown";
 import { QuickAddModal } from "./components/tasks/QuickAddModal";
-import { Journal } from "./components/journal/Journal";
-import { Reminders } from "./components/reminders/Reminders";
 import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
-import { Home } from "./components/home/Home";
 import { exportTasksToCSV } from "./lib/csvExport";
 
 // Lazy load modals that are not immediately needed
@@ -78,14 +75,10 @@ function AppContent() {
     reorderTasks,
     moveTaskToSection,
   } = useTasks();
-  const { projects, loading: projectsLoading, createProject, updateProject } = useProjects();
+  const { projects, loading: projectsLoading, createProject } = useProjects();
   const {
     reminders,
     loading: remindersLoading,
-    createReminder,
-    updateReminder,
-    deleteReminder,
-    completeReminder,
   } = useReminders();
 
   const isLoading = sectionsLoading || tasksLoading || projectsLoading || remindersLoading;
@@ -259,7 +252,7 @@ function AppContent() {
   };
 
   const handleOpenJournal = () => {
-    setCurrentView("journal");
+    setCurrentView("all");
     setJournalOpen(true);
   };
 
@@ -296,13 +289,6 @@ function AppContent() {
       console.error("Export error:", err);
     }
   }, [tasks, projects, sections, success, error]);
-
-  const handleToggleProjectViewMode = useCallback(
-    async (projectId: string, newMode: "standard" | "custom") => {
-      await updateProject(projectId, { view_mode: newMode });
-    },
-    [updateProject],
-  );
 
   const handleAddTask = useCallback(
     async (sectionId: string, rawInput: string) => {
@@ -729,19 +715,19 @@ function AppContent() {
         }
       },
       onGoToHome: () => {
-        handleViewChange("home");
+        handleViewChange("all");
       },
       onGoToAllTasks: () => {
         handleViewChange("all");
       },
       onGoToDayPlan: () => {
-        handleViewChange("today");
+        handleViewChange("all");
       },
       onGoToUrgentImportant: () => {
-        handleViewChange("urgent_important");
+        handleViewChange("all");
       },
       onGoToJournal: () => {
-        handleViewChange("journal");
+        handleViewChange("all");
       },
     },
   });
@@ -777,7 +763,6 @@ function AppContent() {
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
         onExport={handleExportTasks}
-        onToggleProjectViewMode={handleToggleProjectViewMode}
         viewName={getViewName()}
       >
         {isLoading ? (

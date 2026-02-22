@@ -1,12 +1,9 @@
-import { useState } from "react";
 import {
   Menu,
   ChevronLeft,
   Inbox,
-  Plus,
   Settings,
   LogOut,
-  MoreVertical,
   Keyboard,
 } from "lucide-react";
 import { Project, Task, Section } from "../../types";
@@ -38,21 +35,19 @@ export function Sidebar({
   isOpen,
   onToggle,
   currentView,
-  currentProjectId,
+  // currentProjectId is not used in simplified sidebar (no project views)
   onViewChange,
   tasks,
-  sections,
-  projects,
+  // sections is not used in the simplified sidebar
+  // projects is not used in simplified sidebar (no project views)
   userEmail,
   onSignOut,
   searchValue,
   onSearchChange,
   searchResultCount,
-  onCreateProject,
+  // onCreateProject is not used in simplified sidebar (no project views)
   onOpenShortcuts,
 }: SidebarProps) {
-  const [projectMenuOpen, setProjectMenuOpen] = useState<string | null>(null);
-
   // Check if mobile
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
@@ -62,10 +57,6 @@ export function Sidebar({
     if (isMobile && isOpen) {
       onToggle();
     }
-  };
-
-  const getProjectTaskCount = (projectId: string) => {
-    return tasks.filter((task) => task.project_id === projectId).length;
   };
 
   return (
@@ -109,70 +100,6 @@ export function Sidebar({
             </button>
           </div>
 
-          <div className="nav-section">
-            <div className="nav-section-header">
-              <span>Projects</span>
-              <button
-                className="nav-add-button"
-                onClick={onCreateProject}
-                aria-label="Add project"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-
-            {projects.length === 0 ? (
-              <div className="nav-empty">No projects yet</div>
-            ) : (
-              projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="nav-project-item"
-                  onMouseLeave={() => setProjectMenuOpen(null)}
-                >
-                  <button
-                    className={`nav-item ${
-                      currentView === "project" &&
-                      currentProjectId === project.id
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() => handleViewChange("project", project.id)}
-                  >
-                    <span
-                      className="project-dot"
-                      style={{ backgroundColor: project.color }}
-                    />
-                    <span className="project-name">{project.name}</span>
-                    <span className="nav-badge">
-                      {getProjectTaskCount(project.id)}
-                    </span>
-                  </button>
-
-                  <button
-                    className="project-menu-button"
-                    onClick={() =>
-                      setProjectMenuOpen(
-                        projectMenuOpen === project.id ? null : project.id,
-                      )
-                    }
-                    aria-label="Project menu"
-                  >
-                    <MoreVertical size={14} />
-                  </button>
-
-                  {projectMenuOpen === project.id && (
-                    <div className="project-menu">
-                      <button className="project-menu-item">Edit</button>
-                      <button className="project-menu-item danger">
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
         </nav>
 
         <div className="sidebar-footer">
