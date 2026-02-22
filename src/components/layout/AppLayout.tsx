@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Menu, Upload, ChevronRight, LayoutList, FolderKanban } from "lucide-react";
+import { Menu, Upload, Download, ChevronRight, LayoutList, FolderKanban } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Project, Task, Section, ProjectViewMode } from "../../types";
 import { ViewType } from "../../hooks/useTaskFilter";
@@ -25,6 +25,7 @@ interface AppLayoutProps {
   onOpenShortcuts: () => void;
   onOpenJournal: () => void;
   onImport: () => void;
+  onExport: () => void;
 
   // Project view mode
   onToggleProjectViewMode?: (projectId: string, newMode: ProjectViewMode) => void;
@@ -56,6 +57,7 @@ export function AppLayout({
   onOpenShortcuts,
   onOpenJournal,
   onImport,
+  onExport,
   onToggleProjectViewMode,
   viewName,
   children,
@@ -133,6 +135,14 @@ export function AppLayout({
                 </button>
               </div>
             )}
+            <button
+              className="export-button"
+              onClick={onExport}
+              aria-label="Export tasks"
+            >
+              <Download size={16} />
+              Export
+            </button>
             <button
               className="import-button"
               onClick={onImport}

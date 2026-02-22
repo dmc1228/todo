@@ -11,6 +11,7 @@ import { Reminders } from "./components/reminders/Reminders";
 import { ToastContainer } from "./components/common/Toast";
 import { AppSkeleton } from "./components/common/LoadingSkeleton";
 import { Home } from "./components/home/Home";
+import { exportTasksToCSV } from "./lib/csvExport";
 
 // Lazy load modals that are not immediately needed
 const ImportModal = lazy(() =>
@@ -285,6 +286,16 @@ function AppContent() {
       }
     }
   }, [createProject, success, error]);
+
+  const handleExportTasks = useCallback(() => {
+    try {
+      exportTasksToCSV(tasks, projects, sections);
+      success("Tasks exported successfully");
+    } catch (err) {
+      error("Failed to export tasks");
+      console.error("Export error:", err);
+    }
+  }, [tasks, projects, sections, success, error]);
 
   const handleToggleProjectViewMode = useCallback(
     async (projectId: string, newMode: "standard" | "custom") => {
@@ -765,6 +776,7 @@ function AppContent() {
         onOpenShortcuts={() => setShowShortcutsHelp(true)}
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
+        onExport={handleExportTasks}
         onToggleProjectViewMode={handleToggleProjectViewMode}
         viewName={getViewName()}
       >

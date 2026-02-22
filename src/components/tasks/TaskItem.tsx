@@ -51,6 +51,8 @@ export function TaskItem({
   const [tagInput, setTagInput] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(task.name);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const {
     attributes,
@@ -241,12 +243,39 @@ export function TaskItem({
   // Check if task is completed (for shopping list strikethrough view)
   const isCompleted = !!task.completed_at;
 
+  // Swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchEnd - touchStart;
+    const isRightSwipe = distance > 100; // Minimum swipe distance
+
+    if (isRightSwipe && !isCompleted) {
+      handleCheckboxClick({ stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent);
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   return (
     <motion.tr
       ref={setNodeRef}
       style={style}
       className={`task-row ${selected ? "selected" : ""} ${isMultiSelected ? "multi-selected" : ""} ${isCompleting ? "completing" : ""} ${isCompleted ? "completed" : ""} ${isDragging ? "dragging" : ""}`}
       onClick={(e) => onSelect(e)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       initial={{ opacity: 0 }}
       animate={{
         opacity: isCompleting ? 0 : 1,

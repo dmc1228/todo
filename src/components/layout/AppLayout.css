@@ -118,6 +118,29 @@
   transform: scale(0.98);
 }
 
+.export-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.export-button:hover {
+  background: #059669;
+}
+
+.export-button:active {
+  transform: scale(0.98);
+}
+
 .main-content {
   flex: 1;
   padding: 2rem 1.5rem;
