@@ -273,9 +273,9 @@ export function TaskItem({
             aria-label="Complete task"
           >
             {isCompleting || isCompleted ? (
-              <CheckCircle2 size={18} className="checkbox-icon checked" />
+              <CheckCircle2 size={24} className="checkbox-icon checked" />
             ) : (
-              <Circle size={18} className="checkbox-icon" />
+              <Circle size={24} className="checkbox-icon" />
             )}
           </button>
           {isEditingName ? (

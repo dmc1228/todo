@@ -35,7 +35,7 @@ import { Task } from "./types";
 
 function AppContent() {
   const { user, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>("all");
   const [currentProjectId, setCurrentProjectId] = useState<
     string | undefined
@@ -55,7 +55,6 @@ function AppContent() {
   const [lastDeletedTask, setLastDeletedTask] = useState<Task | null>(null);
   const [sectionSelectorOpen, setSectionSelectorOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [shoppingViewMode, setShoppingViewMode] = useState<"incomplete-only" | "show-all-strikethrough">("incomplete-only");
   const { toasts, removeToast, addToast, success, error} = useToast();
 
   // Data hooks
@@ -77,9 +76,7 @@ function AppContent() {
     undoCompleteTask,
     reorderTasks,
     moveTaskToSection,
-  } = useTasks({
-    includeCompleted: currentView === "shopping" && shoppingViewMode === "show-all-strikethrough"
-  });
+  } = useTasks();
   const { projects, loading: projectsLoading, createProject, updateProject } = useProjects();
   const {
     reminders,
@@ -246,39 +243,12 @@ function AppContent() {
     },
   );
 
-  // Filter sections based on current view and context
+  // Filter sections - only show main context sections
   const filteredSections = useMemo(() => {
-    // Shopping view uses shopping context sections
-    if (currentView === "shopping") {
-      return sections.filter((s) => (s as any).context === "shopping");
-    }
-
-    // Project view with custom sections uses project-specific context
-    if (currentView === "project" && currentProjectId) {
-      const project = projects.find((p) => p.id === currentProjectId);
-      if ((project as any)?.view_mode === "custom") {
-        return sections.filter(
-          (s) => (s as any).context === `project-${currentProjectId}`
-        );
-      }
-    }
-
-    // Default: use main context sections
-    const mainSections = sections.filter(
+    return sections.filter(
       (s) => (s as any).context === "main" || !(s as any).context
     );
-
-    // For today view, filter out priority sections
-    if (currentView === "today") {
-      return mainSections.filter((s) => {
-        const name = s.name.toLowerCase();
-        const isPrioritySection = name.includes("priority");
-        return !isPrioritySection;
-      });
-    }
-
-    return mainSections;
-  }, [sections, currentView, currentProjectId, projects]);
+  }, [sections]);
 
   const handleViewChange = (view: ViewType, projectId?: string) => {
     setCurrentView(view);
@@ -295,25 +265,14 @@ function AppContent() {
   const handleCreateSection = useCallback(async () => {
     const name = prompt("Section name:");
     if (name?.trim()) {
-      // Determine context based on current view
-      let context = "main";
-      if (currentView === "shopping") {
-        context = "shopping";
-      } else if (currentView === "project" && currentProjectId) {
-        const project = projects.find((p) => p.id === currentProjectId);
-        if ((project as any)?.view_mode === "custom") {
-          context = `project-${currentProjectId}`;
-        }
-      }
-
-      const result = await createSection(name.trim(), context);
+      const result = await createSection(name.trim(), "main");
       if (result) {
         success("Section created");
       } else {
         error("Failed to create section");
       }
     }
-  }, [createSection, success, error, currentView, currentProjectId, projects]);
+  }, [createSection, success, error]);
 
   const handleCreateProject = useCallback(async () => {
     const name = prompt("Project name:");
@@ -782,34 +741,7 @@ function AppContent() {
 
   // Get view name for header
   const getViewName = () => {
-    switch (currentView) {
-      case "home":
-        return "Home";
-      case "all":
-        return "All Tasks";
-      case "today":
-        return "Day Plan";
-      case "upcoming":
-        return "Upcoming";
-      case "priority":
-        return "High Priority";
-      case "urgent_important":
-        return "Urgent & Important";
-      case "focus":
-        return "Focus Mode";
-      case "journal":
-        return "Journal";
-      case "reminders":
-        return "Reminders";
-      case "shopping":
-        return "Shopping List";
-      case "project": {
-        const project = projects.find((p) => p.id === currentProjectId);
-        return project ? project.name : "Project";
-      }
-      default:
-        return "Tasks";
-    }
+    return "To Do";
   };
 
   return (
@@ -834,29 +766,10 @@ function AppContent() {
         onOpenJournal={handleOpenJournal}
         onImport={() => setImportModalOpen(true)}
         onToggleProjectViewMode={handleToggleProjectViewMode}
-        shoppingViewMode={shoppingViewMode}
-        onToggleShoppingViewMode={setShoppingViewMode}
         viewName={getViewName()}
       >
         {isLoading ? (
           <AppSkeleton />
-        ) : currentView === "home" ? (
-          <Home
-            tasks={tasks}
-            sections={sections}
-            onCompleteTask={handleCompleteTask}
-            onOpenJournal={handleOpenJournal}
-          />
-        ) : currentView === "journal" ? (
-          <Journal />
-        ) : currentView === "reminders" ? (
-          <Reminders
-            reminders={reminders}
-            onCreateReminder={createReminder}
-            onCompleteReminder={completeReminder}
-            onUpdateReminder={updateReminder}
-            onDeleteReminder={deleteReminder}
-          />
         ) : (
           <SectionList
             sections={filteredSections}

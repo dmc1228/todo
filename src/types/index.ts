@@ -3,9 +3,8 @@
 export type Importance = "normal" | "important" | "very_important";
 export type Length = "short" | "medium" | "long";
 export type RecurrenceRule = "daily" | "weekly" | "monthly" | "yearly" | null;
-export type SectionContext = "main" | "shopping" | string; // string for "project-{id}"
+export type SectionContext = "main" | string; // string for "project-{id}"
 export type ProjectViewMode = "standard" | "custom";
-export type ShoppingViewMode = "incomplete-only" | "show-all-strikethrough";
 
 export interface Section {
   id: string;
