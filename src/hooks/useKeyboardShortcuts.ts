@@ -5,23 +5,14 @@ interface KeyboardShortcutHandlers {
   onComplete: () => void;
   onDelete: () => void;
   onUndo: () => void;
-  onOpenDatePicker: () => void;
-  onOpenProjectSelector: () => void;
-  onOpenTagsInput: () => void;
-  onOpenSectionSelector: () => void;
   onOpenQuickAdd: () => void;
   onSelectNext: () => void;
   onSelectPrevious: () => void;
-  onNewTask: () => void;
   onEscape: () => void;
   onOpenDetail: () => void;
   onAddTaskBelow: () => void;
   onCreateSection: () => void;
-  onGoToHome: () => void;
-  onGoToAllTasks: () => void;
-  onGoToDayPlan: () => void;
-  onGoToUrgentImportant: () => void;
-  onGoToJournal: () => void;
+  onOpenSectionSelector: () => void;
 }
 
 interface UseKeyboardShortcutsProps {
@@ -51,17 +42,9 @@ export function useKeyboardShortcuts({
     );
   };
 
-  // Global shortcuts (work anywhere)
   useHotkeys("mod+n", (e) => {
     e.preventDefault();
-    handlers.onNewTask();
-  });
-
-  useHotkeys("/", (e) => {
-    if (!isInputFocused()) {
-      e.preventDefault();
-      // Focus search - TODO: implement with SearchInput ref
-    }
+    handlers.onOpenQuickAdd();
   });
 
   useHotkeys("shift+/", (e) => {
@@ -69,33 +52,6 @@ export function useKeyboardShortcuts({
     setShowShortcutsHelp(true);
   });
 
-  // Navigation shortcuts
-  useHotkeys("mod+1", (e) => {
-    e.preventDefault();
-    handlers.onGoToHome();
-  });
-
-  useHotkeys("mod+2", (e) => {
-    e.preventDefault();
-    handlers.onGoToAllTasks();
-  });
-
-  useHotkeys("mod+3", (e) => {
-    e.preventDefault();
-    handlers.onGoToDayPlan();
-  });
-
-  useHotkeys("mod+4", (e) => {
-    e.preventDefault();
-    handlers.onGoToUrgentImportant();
-  });
-
-  useHotkeys("mod+9", (e) => {
-    e.preventDefault();
-    handlers.onGoToJournal();
-  });
-
-  // Task-selected shortcuts (only when a task is selected)
   useHotkeys(
     "mod+enter",
     (e) => {
@@ -118,7 +74,6 @@ export function useKeyboardShortcuts({
     [selectedTaskId],
   );
 
-  // Space to open detail panel (moved from Enter)
   useHotkeys(
     "space",
     (e) => {
@@ -141,7 +96,6 @@ export function useKeyboardShortcuts({
     [selectedTaskId],
   );
 
-  // Command+Z for undo
   useHotkeys(
     "mod+z",
     (e) => {
@@ -177,7 +131,6 @@ export function useKeyboardShortcuts({
     "escape",
     (e) => {
       e.preventDefault();
-      // Close shortcuts help first if it's open
       if (showShortcutsHelp) {
         setShowShortcutsHelp(false);
         return;
@@ -194,26 +147,17 @@ export function useKeyboardShortcuts({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isInputFocused()) return;
 
-      // Tab pressed - start the sequence
       if (e.key === "Tab" && !tabPressed) {
         e.preventDefault();
         setTabPressed(true);
-
-        // Clear any existing timer
-        if (tabTimerRef.current) {
-          clearTimeout(tabTimerRef.current);
-        }
-
-        // Set 500ms timeout to clear the flag
+        if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
         tabTimerRef.current = window.setTimeout(() => {
           setTabPressed(false);
         }, 500);
         return;
       }
 
-      // If tab was pressed, check for follow-up keys
       if (tabPressed) {
-        // Tab + Q: Open quick add modal (works without selection)
         if (e.key.toLowerCase() === "q") {
           e.preventDefault();
           handlers.onOpenQuickAdd();
@@ -222,7 +166,6 @@ export function useKeyboardShortcuts({
           return;
         }
 
-        // Tab + N: Create new section (works without selection)
         if (e.key.toLowerCase() === "n") {
           e.preventDefault();
           handlers.onCreateSection();
@@ -231,7 +174,6 @@ export function useKeyboardShortcuts({
           return;
         }
 
-        // Tab + Enter: Mark complete (Asana style)
         if (e.key === "Enter" && selectedTaskId) {
           e.preventDefault();
           handlers.onComplete();
@@ -240,49 +182,23 @@ export function useKeyboardShortcuts({
           return;
         }
 
-        // These require a task to be selected
         if (selectedTaskId) {
           e.preventDefault();
-
-          switch (e.key.toLowerCase()) {
-            case "d":
-              handlers.onOpenDatePicker();
-              setTabPressed(false);
-              break;
-            case "p":
-              handlers.onOpenProjectSelector();
-              setTabPressed(false);
-              break;
-            case "t":
-              handlers.onOpenTagsInput();
-              setTabPressed(false);
-              break;
-            case "u":
-              handlers.onOpenSectionSelector();
-              setTabPressed(false);
-              break;
+          if (e.key.toLowerCase() === "u") {
+            handlers.onOpenSectionSelector();
           }
-
-          // Clear the timer
-          if (tabTimerRef.current) {
-            clearTimeout(tabTimerRef.current);
-          }
+          setTabPressed(false);
+          if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      if (tabTimerRef.current) {
-        clearTimeout(tabTimerRef.current);
-      }
+      if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
     };
   }, [tabPressed, selectedTaskId, handlers]);
 
-  return {
-    showShortcutsHelp,
-    setShowShortcutsHelp,
-  };
+  return { showShortcutsHelp, setShowShortcutsHelp };
 }

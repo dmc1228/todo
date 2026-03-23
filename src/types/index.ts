@@ -1,26 +1,15 @@
-// Database types matching our Supabase schema
-
 export type Importance = "normal" | "important" | "very_important";
 export type Length = "short" | "medium" | "long";
 export type RecurrenceRule = "daily" | "weekly" | "monthly" | "yearly" | null;
-export type SectionContext = "main" | "shopping" | string; // string for "project-{id}"
+export type SectionContext = "main" | string;
 export type ProjectViewMode = "standard" | "custom";
-export type ShoppingViewMode = "incomplete-only" | "show-all-strikethrough";
 
 export interface Section {
   id: string;
   name: string;
   position: number;
-  context: SectionContext; // 'main', 'shopping', or 'project-{projectId}'
+  context: SectionContext;
   user_id: string;
-  created_at: string;
-}
-
-export interface ProjectCollaborator {
-  id: string;
-  user_id: string;
-  role: 'owner' | 'editor';
-  email: string;
   created_at: string;
 }
 
@@ -28,17 +17,7 @@ export interface Project {
   id: string;
   name: string;
   color: string;
-  view_mode: ProjectViewMode; // 'standard' uses main sections, 'custom' uses project-specific sections
-  user_id: string;
-  created_at: string;
-  collaborators?: ProjectCollaborator[];
-}
-
-export interface Reminder {
-  id: string;
-  name: string;
-  due_date: string | null;
-  completed: boolean;
+  view_mode: ProjectViewMode;
   user_id: string;
   created_at: string;
 }
@@ -62,8 +41,6 @@ export interface Task {
   user_id: string;
   created_at: string;
 }
-
-// Types for creating new records (omitting generated fields)
 
 export interface NewTask {
   name: string;
@@ -93,8 +70,6 @@ export interface NewProject {
   color?: string;
 }
 
-// Quick-add parser types
-
 export interface ParsedTaskInput {
   name: string;
   importance: Importance;
@@ -102,17 +77,4 @@ export interface ParsedTaskInput {
   project?: string;
   tags: string[];
   dueDate?: Date;
-}
-
-// CSV import types
-
-export type AsanaCSVRow = Record<string, string>;
-
-export interface ColumnMapping {
-  name: string;
-  dueDate?: string;
-  project?: string;
-  tags?: string;
-  notes?: string;
-  section?: string;
 }

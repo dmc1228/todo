@@ -8,7 +8,6 @@ import { AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Section as SectionType, Task, Project } from "../../types";
 import { TaskItem } from "../tasks/TaskItem";
-import { SmartShoppingInput } from "./SmartShoppingInput";
 import "./Section.css";
 
 interface SectionProps {
@@ -25,17 +24,6 @@ interface SectionProps {
   onAddTask: (sectionId: string, rawInput: string) => Promise<Task | null>;
   onOpenSectionMove?: (taskId: string) => void;
   dragHandleProps?: any;
-  columnWidths?: {
-    taskName: number;
-    dueDate: number;
-    priority: number;
-    urgent: number;
-    length: number;
-    tags: number;
-    projects: number;
-  };
-  allTasks?: Task[]; // All tasks including completed for shopping list
-  onUnarchiveTask?: (taskId: string) => void;
 }
 
 export function Section({
@@ -52,9 +40,6 @@ export function Section({
   onAddTask,
   onOpenSectionMove,
   dragHandleProps: _dragHandleProps,
-  columnWidths,
-  allTasks,
-  onUnarchiveTask,
 }: SectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(section.name);
@@ -63,19 +48,11 @@ export function Section({
   const [isAddingTask, setIsAddingTask] = useState(false);
   const addTaskInputRef = useRef<HTMLInputElement>(null);
 
-  const { setNodeRef } = useDroppable({
-    id: section.id,
-  });
-
+  const { setNodeRef } = useDroppable({ id: section.id });
   const taskIds = tasks.map((t) => t.id);
 
-  // Check if this is a shopping section
-  const isShoppingSection = (section as any).context === "shopping";
-
   const handleHeaderClick = () => {
-    if (!isEditing) {
-      setIsCollapsed(!isCollapsed);
-    }
+    if (!isEditing) setIsCollapsed(!isCollapsed);
   };
 
   const handleNameClick = (e: React.MouseEvent) => {
@@ -93,12 +70,8 @@ export function Section({
   };
 
   const handleNameKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleNameSave();
-    } else if (e.key === "Escape") {
-      setEditValue(section.name);
-      setIsEditing(false);
-    }
+    if (e.key === "Enter") handleNameSave();
+    else if (e.key === "Escape") { setEditValue(section.name); setIsEditing(false); }
   };
 
   const handleAddTaskSubmit = async () => {
@@ -112,10 +85,6 @@ export function Section({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewTaskInput(e.target.value);
-  };
-
   const handleAddTaskKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -126,62 +95,35 @@ export function Section({
     }
   };
 
-  const handleAddTaskPaste = async (
-    e: React.ClipboardEvent<HTMLInputElement>,
-  ) => {
+  const handleAddTaskPaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     const pastedText = e.clipboardData.getData("text");
-
-    // Check if the pasted text contains multiple lines
-    const lines = pastedText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+    const lines = pastedText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
 
     if (lines.length > 1) {
-      // Prevent default paste behavior
       e.preventDefault();
-
       setIsAddingTask(true);
       try {
-        // Create a task for each line
         for (const line of lines) {
-          try {
-            await onAddTask(section.id, line);
-          } catch (err) {
-            console.error("Failed to create task from line:", line, err);
-          }
+          try { await onAddTask(section.id, line); }
+          catch (err) { console.error("Failed to create task:", line, err); }
         }
-
-        // Clear input
         setNewTaskInput("");
       } finally {
         setIsAddingTask(false);
       }
     }
-    // If only one line, allow normal paste behavior
   };
 
   return (
     <Fragment>
-      <tr
-        ref={setNodeRef}
-        className={`section-header-row ${isShoppingSection ? "shopping-view" : ""}`}
-        onClick={handleHeaderClick}
-      >
+      <tr ref={setNodeRef} className="section-header-row" onClick={handleHeaderClick}>
         <td colSpan={8} className="section-cell-header">
           <div className="section-header-content">
             <button
               className="collapse-toggle"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsCollapsed(!isCollapsed);
-              }}
+              onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }}
             >
-              {isCollapsed ? (
-                <ChevronRight size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              )}
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
             </button>
 
             {isEditing ? (
@@ -197,15 +139,10 @@ export function Section({
               />
             ) : (
               <>
-                <h3 className="section-name" onClick={handleNameClick}>
-                  {section.name}
-                </h3>
+                <h3 className="section-name" onClick={handleNameClick}>{section.name}</h3>
                 <button
                   className="section-delete-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteSection(section.id);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
                   title="Delete section"
                 >
                   <Trash2 size={14} />
@@ -219,37 +156,23 @@ export function Section({
       <AnimatePresence>
         {!isCollapsed && (
           <Fragment>
-            {/* Add task input - right under section header */}
-            <tr className={`section-add-task-row ${isShoppingSection ? "shopping-view" : ""}`}>
+            <tr className="section-add-task-row">
               <td colSpan={8} className="section-add-task-cell">
-                {isShoppingSection && allTasks && onUnarchiveTask ? (
-                  <SmartShoppingInput
-                    sectionId={section.id}
-                    allTasks={allTasks}
-                    onAddTask={onAddTask}
-                    onUnarchiveTask={onUnarchiveTask}
-                    disabled={isAddingTask}
-                  />
-                ) : (
-                  <input
-                    ref={addTaskInputRef}
-                    type="text"
-                    value={newTaskInput}
-                    onChange={handleInputChange}
-                    onKeyDown={handleAddTaskKeyDown}
-                    onPaste={handleAddTaskPaste}
-                    placeholder="New task"
-                    disabled={isAddingTask}
-                    className="section-add-task-input"
-                  />
-                )}
+                <input
+                  ref={addTaskInputRef}
+                  type="text"
+                  value={newTaskInput}
+                  onChange={(e) => setNewTaskInput(e.target.value)}
+                  onKeyDown={handleAddTaskKeyDown}
+                  onPaste={handleAddTaskPaste}
+                  placeholder="New task"
+                  disabled={isAddingTask}
+                  className="section-add-task-input"
+                />
               </td>
             </tr>
 
-            <SortableContext
-              items={taskIds}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
               {tasks.map((task, index) => (
                 <TaskItem
                   key={task.id}
@@ -261,13 +184,8 @@ export function Section({
                   onComplete={() => onCompleteTask(task.id)}
                   onUpdate={onUpdateTask}
                   onOpenSectionMove={onOpenSectionMove}
-                  onAddTaskBelow={async () => {
-                    // Create a new task below this one
-                    await onAddTask(section.id, "New task");
-                  }}
+                  onAddTaskBelow={async () => { await onAddTask(section.id, "New task"); }}
                   rowNumber={index + 1}
-                  isShoppingView={isShoppingSection}
-                  columnWidths={columnWidths}
                 />
               ))}
             </SortableContext>

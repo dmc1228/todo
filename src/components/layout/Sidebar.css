@@ -145,27 +145,6 @@
   color: #1e40af;
 }
 
-.nav-item-home {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  padding: 0.75rem 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.nav-item-home:not(.active) {
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-  color: #1f2937;
-}
-
-.nav-item-home:hover:not(.active) {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-}
-
-.nav-item-home.active {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
 
 .nav-empty {
   padding: 1rem 0.75rem;
@@ -407,20 +386,6 @@
     color: #93c5fd;
   }
 
-  .nav-item-home:not(.active) {
-    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-    color: #e5e7eb;
-  }
-
-  .nav-item-home:hover:not(.active) {
-    background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
-  }
-
-  .nav-item-home.active {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
-  }
 
   .project-menu {
     background: #374151;

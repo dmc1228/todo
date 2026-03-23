@@ -7,40 +7,20 @@ interface ShortcutsHelpProps {
   onClose: () => void;
 }
 
-interface Shortcut {
-  keys: string[];
-  description: string;
-}
-
-interface ShortcutCategory {
-  title: string;
-  shortcuts: Shortcut[];
-}
-
-const shortcuts: ShortcutCategory[] = [
-  {
-    title: "Navigation",
-    shortcuts: [
-      { keys: ["⌘", "1"], description: "Go to Home" },
-      { keys: ["⌘", "2"], description: "Go to All Tasks" },
-      { keys: ["⌘", "3"], description: "Go to Day Plan" },
-      { keys: ["⌘", "4"], description: "Go to Urgent & Important" },
-      { keys: ["⌘", "9"], description: "Go to Journal" },
-    ],
-  },
+const shortcuts = [
   {
     title: "Global",
     shortcuts: [
-      { keys: ["⇥", "Q"], description: "Quick add task" },
-      { keys: ["/"], description: "Focus search" },
+      { keys: ["⌘", "N"], description: "Quick add task" },
       { keys: ["?"], description: "Show keyboard shortcuts" },
     ],
   },
   {
     title: "Task Selected",
     shortcuts: [
-      { keys: ["⇥", "↵"], description: "Complete task" },
-      { keys: ["↵"], description: "Open task detail" },
+      { keys: ["⌘", "↵"], description: "Complete task" },
+      { keys: ["Space"], description: "Open task detail" },
+      { keys: ["↵"], description: "Add task below" },
       { keys: ["⌫"], description: "Delete task" },
       { keys: ["↑", "K"], description: "Select previous task" },
       { keys: ["↓", "J"], description: "Select next task" },
@@ -48,12 +28,12 @@ const shortcuts: ShortcutCategory[] = [
     ],
   },
   {
-    title: "Tab Sequences (Asana-style)",
+    title: "Tab Sequences",
     shortcuts: [
-      { keys: ["⇥", "D"], description: "Set due date" },
-      { keys: ["⇥", "P"], description: "Assign to project" },
-      { keys: ["⇥", "T"], description: "Add tags" },
+      { keys: ["⇥", "Q"], description: "Quick add task" },
+      { keys: ["⇥", "N"], description: "New section" },
       { keys: ["⇥", "U"], description: "Move to section" },
+      { keys: ["⇥", "↵"], description: "Complete task" },
     ],
   },
   {
@@ -61,7 +41,6 @@ const shortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ["*"], description: "Mark as Important" },
       { keys: ["!"], description: "Mark as Urgent" },
-      { keys: ["*!"], description: "Important & Urgent" },
       { keys: ["#tag"], description: "Add tag" },
       { keys: ["p:Name"], description: "Assign project" },
       { keys: ["@date"], description: "Set due date" },
@@ -95,25 +74,21 @@ export function ShortcutsHelp({ isOpen, onClose }: ShortcutsHelpProps) {
             </div>
 
             <div className="shortcuts-content">
-              {shortcuts.map((category, categoryIndex) => (
-                <div key={categoryIndex} className="shortcuts-category">
+              {shortcuts.map((category, i) => (
+                <div key={i} className="shortcuts-category">
                   <h3 className="category-title">{category.title}</h3>
                   <div className="shortcuts-grid">
-                    {category.shortcuts.map((shortcut, shortcutIndex) => (
-                      <div key={shortcutIndex} className="shortcut-row">
+                    {category.shortcuts.map((shortcut, j) => (
+                      <div key={j} className="shortcut-row">
                         <div className="shortcut-keys">
-                          {shortcut.keys.map((key, keyIndex) => (
-                            <span key={keyIndex}>
+                          {shortcut.keys.map((key, k) => (
+                            <span key={k}>
                               <kbd className="key">{key}</kbd>
-                              {keyIndex < shortcut.keys.length - 1 && (
-                                <span className="key-separator">+</span>
-                              )}
+                              {k < shortcut.keys.length - 1 && <span className="key-separator">+</span>}
                             </span>
                           ))}
                         </div>
-                        <div className="shortcut-description">
-                          {shortcut.description}
-                        </div>
+                        <div className="shortcut-description">{shortcut.description}</div>
                       </div>
                     ))}
                   </div>

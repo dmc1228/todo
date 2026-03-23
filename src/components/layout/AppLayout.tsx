@@ -1,12 +1,11 @@
-import { ReactNode, useEffect, useRef } from "react";
-import { Menu, Upload, ChevronRight, LayoutList, FolderKanban, Eye, EyeOff, Share2 } from "lucide-react";
+import { ReactNode } from "react";
+import { Menu, ChevronRight, LayoutList, FolderKanban } from "lucide-react";
 import { Sidebar } from "./Sidebar";
-import { Project, Task, Section, ProjectViewMode, ShoppingViewMode } from "../../types";
+import { Project, Task, Section, ProjectViewMode } from "../../types";
 import { ViewType } from "../../hooks/useTaskFilter";
 import "./AppLayout.css";
 
 interface AppLayoutProps {
-  // Sidebar props
   sidebarOpen: boolean;
   onSidebarToggle: () => void;
   currentView: ViewType;
@@ -20,26 +19,12 @@ interface AppLayoutProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchResultCount?: number;
-  remindersCount?: number;
   onCreateProject: () => void;
+  onDeleteProject: (projectId: string) => void;
   onOpenShortcuts: () => void;
-  onOpenJournal: () => void;
-  onImport: () => void;
-  onShare?: () => void; // Share button for shopping, agenda, and projects
-
-  // Project view mode
   onToggleProjectViewMode?: (projectId: string, newMode: ProjectViewMode) => void;
-
-  // Shopping view mode
-  shoppingViewMode?: ShoppingViewMode;
-  onToggleShoppingViewMode?: (mode: ShoppingViewMode) => void;
-
-  // Main content
   viewName: string;
   children: ReactNode;
-
-  // Detail panel
-  detailPanel?: ReactNode;
 }
 
 export function AppLayout({
@@ -56,71 +41,18 @@ export function AppLayout({
   searchValue,
   onSearchChange,
   searchResultCount,
-  remindersCount,
   onCreateProject,
+  onDeleteProject,
   onOpenShortcuts,
-  onOpenJournal,
-  onImport,
   onToggleProjectViewMode,
-  shoppingViewMode,
-  onToggleShoppingViewMode,
-  onShare,
   viewName,
   children,
-  detailPanel,
 }: AppLayoutProps) {
-  // Get current project's view mode
-  const currentProject = currentView === "project" && currentProjectId
-    ? projects.find((p) => p.id === currentProjectId)
-    : null;
+  const currentProject =
+    currentView === "project" && currentProjectId
+      ? projects.find((p) => p.id === currentProjectId)
+      : null;
   const projectViewMode = currentProject?.view_mode || "standard";
-
-  // Mobile swipe gesture support
-  const touchStartX = useRef<number>(0);
-  const touchStartY = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const touchEndY = useRef<number>(0);
-
-  useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX.current = e.touches[0].clientX;
-      touchStartY.current = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      touchEndX.current = e.touches[0].clientX;
-      touchEndY.current = e.touches[0].clientY;
-    };
-
-    const handleTouchEnd = () => {
-      const deltaX = touchEndX.current - touchStartX.current;
-      const deltaY = touchEndY.current - touchStartY.current;
-      const absDeltaX = Math.abs(deltaX);
-      const absDeltaY = Math.abs(deltaY);
-
-      // Only consider horizontal swipes (more horizontal than vertical)
-      if (absDeltaX > absDeltaY && absDeltaX > 50) {
-        // Swipe from left edge to open sidebar
-        if (!sidebarOpen && touchStartX.current < 30 && deltaX > 0) {
-          onSidebarToggle();
-        }
-        // Swipe left to close sidebar
-        else if (sidebarOpen && deltaX < -50) {
-          onSidebarToggle();
-        }
-      }
-    };
-
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [sidebarOpen, onSidebarToggle]);
 
   return (
     <div className="app-layout">
@@ -138,68 +70,26 @@ export function AppLayout({
         searchValue={searchValue}
         onSearchChange={onSearchChange}
         searchResultCount={searchResultCount}
-        remindersCount={remindersCount}
         onCreateProject={onCreateProject}
+        onDeleteProject={onDeleteProject}
         onOpenShortcuts={onOpenShortcuts}
-        onOpenJournal={onOpenJournal}
       />
 
       {!sidebarOpen && (
-        <button
-          className="sidebar-reopen-button"
-          onClick={onSidebarToggle}
-          aria-label="Open sidebar"
-        >
+        <button className="sidebar-reopen-button" onClick={onSidebarToggle} aria-label="Open sidebar">
           <ChevronRight size={20} />
         </button>
       )}
 
-      <div
-        className={`main-container ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}
-      >
+      <div className={`main-container ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
         <header className="main-header">
           <div className="header-left">
-            <button
-              className="mobile-menu-button"
-              onClick={onSidebarToggle}
-              aria-label="Toggle menu"
-            >
+            <button className="mobile-menu-button" onClick={onSidebarToggle} aria-label="Toggle menu">
               <Menu size={20} />
             </button>
             <h1 className="view-title">{viewName}</h1>
           </div>
           <div className="header-right">
-            {(currentView === "shopping" || currentView === "agenda" || currentView === "project") && onShare && (
-              <button
-                className="share-button"
-                onClick={onShare}
-                title="Share this view"
-                aria-label="Share"
-              >
-                <Share2 size={16} />
-                <span>Share</span>
-              </button>
-            )}
-            {currentView === "shopping" && onToggleShoppingViewMode && (
-              <div className="view-mode-toggle">
-                <button
-                  className={`view-mode-btn ${shoppingViewMode === "incomplete-only" ? "active" : ""}`}
-                  onClick={() => onToggleShoppingViewMode("incomplete-only")}
-                  title="Show incomplete tasks only"
-                >
-                  <EyeOff size={16} />
-                  <span>Active Only</span>
-                </button>
-                <button
-                  className={`view-mode-btn ${shoppingViewMode === "show-all-strikethrough" ? "active" : ""}`}
-                  onClick={() => onToggleShoppingViewMode("show-all-strikethrough")}
-                  title="Show all tasks with completed crossed out"
-                >
-                  <Eye size={16} />
-                  <span>Show All</span>
-                </button>
-              </div>
-            )}
             {currentView === "project" && currentProjectId && onToggleProjectViewMode && (
               <div className="view-mode-toggle">
                 <button
@@ -220,23 +110,11 @@ export function AppLayout({
                 </button>
               </div>
             )}
-            <button
-              className="import-button"
-              onClick={onImport}
-              aria-label="Import tasks"
-            >
-              <Upload size={16} />
-              Import
-            </button>
           </div>
         </header>
 
         <main className="main-content">{children}</main>
       </div>
-
-      {detailPanel && (
-        <div className="detail-panel-container">{detailPanel}</div>
-      )}
     </div>
   );
 }
